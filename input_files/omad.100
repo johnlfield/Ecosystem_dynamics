@@ -1,0 +1,992 @@
+M        STRAW-MANURE
+1               'OMADTYP'
+100.0           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'
+30.0            'ASTREC(1)'
+300.0           'ASTREC(2)'
+300.0           'ASTREC(3)'
+MLRA      us_mlra 1 grams/m^2 4/17/2003
+1.5               'OMADTYP'
+1               'ASTGC'
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+40.0            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M0.6  Organic_matter_addition_for_M0.6   
+1.5               'OMADTYP'
+96              'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M0.7  Organic_matter_addition_for_M0.7   
+1.5               'OMADTYP'
+112             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M1.0  Organic_matter_addition_for_M1.0   
+1.5               'OMADTYP'
+160             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M1.2  Organic_matter_addition_for_M1.2   
+1.5               'OMADTYP'
+192             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M1.4  Organic_matter_addition_for_M1.4   
+1.5               'OMADTYP'
+2.24            'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M1.5  Organic_matter_addition_for_M1.5   
+1.5               'OMADTYP'
+240             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M1.6  Organic_matter_addition_for_M1.6   
+1.5               'OMADTYP'
+256             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M1.7  Organic_matter_addition_for_M1.7   
+1.5               'OMADTYP'
+272             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M1.8  Organic_matter_addition_for_M1.8   
+1.5               'OMADTYP'
+288             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M2.0  Organic_matter_addition_for_M2.0   
+1.5               'OMADTYP'
+320             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M2.1  Organic_matter_addition_for_M2.1   
+1.5               'OMADTYP'
+336             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M2.4  Organic_matter_addition_for_M2.4   
+1.5               'OMADTYP'
+384             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+M2.6  Organic_matter_addition_for_M2.6   
+1.5               'OMADTYP'
+416             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+22.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+MPV   Organic_matter_addition_for_MPV    
+1               'OMADTYP'
+83.7            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+E22   Organic_matter_addition_for_elansing2_22tons   
+1.5               'OMADTYP'
+240             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+6.0             'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+E45   Organic_matter_addition_for_elansing2_45tons
+1.5               'OMADTYP'
+491             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+6.0             'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+E67   Organic_matter_addition_for_elansing2_67tons   
+1.5               'OMADTYP'
+732             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+6.0             'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+MAC   Organic_matter_addition_for_MacDonald   
+1.5               'OMADTYP'
+165             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+23.5            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+C286   Organic_matter_addition   
+1.5               'OMADTYP'
+36              'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+10.2            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+MEAD  Organic_matter_addition_for_Mead LT   
+1.5               'OMADTYP'
+96.6            'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+6.0             'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+P148   10tons manure Pendleton Experiment
+1.5               'OMADTYP'
+174             'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+12.0            'ASTREC(1)'
+150.00          'ASTREC(2)'
+150.00          'ASTREC(3)'
+C20        Cattle 20
+1.5               'OMADTYP'
+258.0           'ASTGC' 
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+34.21           'ASTREC(1)'  C:N ratio
+150.00          'ASTREC(2)'
+150.00          'ASTREC(3)'
+IM80     MANURE  Iowa application rates (20 x 4)
+1.5               'OMADTYP'
+80.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM60     MANURE  Iowa application rates (15 x 4)
+1.5               'OMADTYP'
+60.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM40     MANURE  Iowa application rates (10 x 4)
+1.5               'OMADTYP'
+40.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM30     MANURE  Iowa application rates (15 x 2)
+1.5               'OMADTYP'
+30.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM20     MANURE  Iowa application rates ( 5 x 4)
+1.5               'OMADTYP'
+20.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM10     MANURE  Iowa application rates ( 5 x 2)
+1.5               'OMADTYP'
+10.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+BOMAH Boma_manure_high_rate_10tons Treynor IA
+1.5               'OMADTYP'
+200.0           'ASTGC'     
+0.0             'ASTLBL'    
+0.25            'ASTLIG'    
+25.0            'ASTREC(1)' 
+300.0           'ASTREC(2)' 
+300.0           'ASTREC(3)'
+BFSD      LRR beef solid 12/5/03 unsurfaced lot,dry climate
+1.5               'OMADTYP'
+33.88           'ASTGC' # gC/m2/ton
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+12.60           'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+BFSL      LRR beef slurry 12/5/03 runoff pond sludge
+1.5               'OMADTYP'
+.0397           'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+6.87            'ASTREC(1)'  # C:N ratio 
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+BFLQ      LRR beef liquid 12/5/03 runoff pond supernatant
+1.5               'OMADTYP'
+.0005           'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+2.47            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+DYSD      LRR dairy solid 12/5/03 used beef solid
+1.5               'OMADTYP'
+33.88           'ASTGC' # gC/m2/ton
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+12.60           'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+DYSL      LRR dairy slurry 12/5/03 anaer. lagoon sludge
+1.5               'OMADTYP'
+.0236           'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+10.12           'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+DYLQ      LRR dairy liquid 12/5/03 anaer. lagoon supernatant
+1.5               'OMADTYP'
+.0006           'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+3.02            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+PYSD      LRR poultry solid 12/5/03 broiler litter
+1.5               'OMADTYP'
+75.61           'ASTGC' # gC/m2/ton
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+17.37           'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+PYSL      LRR poultry slurry 12/5/03 layer anaer. lagoon sludge
+1.5               'OMADTYP'
+.0249           'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+6.84            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+PYLQ      LRR poultry liquid 12/5/03 layer anaer. lagoon supernatant
+1.5               'OMADTYP'
+.0011           'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+1.61            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+SWSD      LRR swine solid 12/5/03dry swine solids wardlab.com
+1.5               'OMADTYP'
+35.17           'ASTGC' # gC/m2/ton
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+13.45           'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+SWSL      LRR swine slurry 12/5/03 anaer.lagoon sludge
+1.5               'OMADTYP'
+.0234           'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+8.36            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+SWLQ      LRR swine liquid 12/5/03 anaer.lagoon supernatent
+1.5               'OMADTYP'
+.0006           'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+1.89            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+HRSD      LRR horse solid 12/5/03
+1.5               'OMADTYP'
+48.17           'ASTGC' # gC/m2/ton
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+30.72           'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+HRSL      LRR horse slurry 12/5/03
+1.5               'OMADTYP'
+.0397           'ASTGC' # gC/m2/gal, used beef
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+6.87            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+HRLQ      LRR horse liquid 12/5/03
+1.5               'OMADTYP'
+.0005           'ASTGC' # gC/m2/gal, from beef
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+2.47            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+SHSD      LRR sheep solid 12/5/03
+1.5               'OMADTYP'
+28.63           'ASTGC' # gC/m2/ton
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+11.36           'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+SHSL      LRR sheep slurry 12/5/03
+1.5               'OMADTYP'
+.0397           'ASTGC' # gC/m2/gal, used beef
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+6.87            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+SHLQ      LRR sheep liquid 12/5/03
+1.5               'OMADTYP'
+.0005           'ASTGC' # gC/m2/gal, from beef
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+2.47            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+MISL      LRR municipal slurry 12/5/03
+1.5               'OMADTYP'
+.0138           'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+10.27           'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+MILQ      LRR municipal liquid 12/5/03
+1.5               'OMADTYP'
+2.45            'ASTGC' # gC/m2/gal
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+9.63            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'  # ?
+150.0           'ASTREC(3)'  # ?
+MLRA      us_mlra 1 grams/m^2 4/17/2003
+1.5               'OMADTYP'
+1               'ASTGC'
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+150.            'ASTREC(1)'  # C:N ratio
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+SW      Swine 0.1 Tons/acre Nebraska CSRA, 1/16/2002 MJE
+1.5               'OMADTYP'
+1.29            'ASTGC'
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+33.00           'ASTREC(1)'  # C:N ratio
+150.00          'ASTREC(2)'
+150.00          'ASTREC(3)'
+P        Poultry 0.1 Tons/acre Nebraska CSRA, 1/16/2002 MJE
+1.5               'OMADTYP'
+2.45            'ASTGC'
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+12.25           'ASTREC(1)'  C:N ratio
+150.00          'ASTREC(2)'
+150.00          'ASTREC(3)'
+H        Horse 0.1 Tons/acre Nebraska CSRA, 1/16/2002 MJE
+1.5               'OMADTYP'
+2.39            'ASTGC' //data/paustian/agecosys/marke/omad 100 worksheet
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+29.78           'ASTREC(1)'  C:N ratio
+150.00          'ASTREC(2)'
+150.00          'ASTREC(3)'
+SH       Sheep 0.1 Tons/acre Nebraska CSRA, 1/16/2002 MJE
+1.5               'OMADTYP'
+2.52            'ASTGC' //data/paustian/agecosys/marke/omad 100 worksheet
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.38           'ASTREC(1)'  C:N ratio
+150.00          'ASTREC(2)'
+150.00          'ASTREC(3)'
+C        Cattle 0.1 Tons/acre Nebraska CSRA, 1/16/2002 MJE
+1.5               'OMADTYP'
+1.29            'ASTGC' //data/paustian/agecosys/marke/omad 100 worksheet
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+34.21           'ASTREC(1)'  C:N ratio
+150.00          'ASTREC(2)'
+150.00          'ASTREC(3)'
+B        Breton omad 0.1 Tons/acre 11/25/2002 saw
+1.5               'OMADTYP'
+1.29            'ASTGC' //data/paustian/agecosys/marke/omad 100 worksheet
+0.00            'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+22.00           'ASTREC(1)'  C:N ratio from literature
+150.00          'ASTREC(2)'
+150.00          'ASTREC(3)'
+IM80     MANURE  Iowa application rates (20 x 4)
+1.5               'OMADTYP'
+80.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM60     MANURE  Iowa application rates (15 x 4)
+1 .5              'OMADTYP'
+60.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM40     MANURE  Iowa application rates (10 x 4)
+1.5               'OMADTYP'
+40.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM30     MANURE  Iowa application rates (15 x 2)
+1.5               'OMADTYP'
+30.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM20     MANURE  Iowa application rates ( 5 x 4)
+1.5               'OMADTYP'
+20.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+IM10     MANURE  Iowa application rates ( 5 x 2)
+1.5               'OMADTYP'
+20.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M        STRAW-MANURE
+1               'OMADTYP'
+100.0           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+30.0            'ASTREC(1)'
+300.0           'ASTREC(2)'
+300.0           'ASTREC(3)'
+W        WHEAT-STRAW
+1               'OMADTYP'
+100.0           'ASTGC'
+0.0             'ASTLBL'
+0.15            'ASTLIG'
+80.0            'ASTREC(1)'
+300.0           'ASTREC(2)'
+300.0           'ASTREC(3)'
+M0.1T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+5.3             'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M0.2T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+10.54           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M.25T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+13.18           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M0.3T    MANURE J. Brenner Indiana Experiment
+1.5               'OMADTYP'
+15.81           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M0.4T    MANURE J. Brenner Indiana Experiment
+1.5               'OMADTYP'
+21.08           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M0.5T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+26.3            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M0.6T    MANURE J. Brenner Indiana Experiment
+1.5               'OMADTYP'
+31.62           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M0.7T    MANURE J. Brenner Indiana Experiment
+1.5               'OMADTYP'
+36.89           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M0.8T    MANURE J. Brenner Indiana Experiment
+1.5               'OMADTYP'
+42.16           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M0.9T    MANURE J. Brenner Indiana Experiment
+1.5               'OMADTYP'
+47.43           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M1.0T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+52.7            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M1.2T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+63.24           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M1.5T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+79.0            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M2.0T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+105.4           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M2.5T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+131.7           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M3.0T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+158.1           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M4.0T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+210.7           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M5.0T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+263.4           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M5.5T    MANURE J. Brenner Iowa Experiment
+1.5               'OMADTYP'
+289.8           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+M6.0T    MANURE J. Brenner Indiana Experiment
+1.5               'OMADTYP'
+316.2           'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+MPV   PEA VINE Pendleton Experiment
+1               'OMADTYP'
+83.7            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+15.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+CN6      Inventory_2006 08/06
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+6.0           'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN7      Inventory_2006 08/06
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+7.0           'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN8      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+8.0           'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN9      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+9.0           'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN10      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+10.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN11      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+11.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN12      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+12.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN13      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+13.0          'ASTREC(1)'  # C:N ratio 
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN14      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+14.0          'ASTREC(1)'  # C:N ratio 
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN15      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+15.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN16      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+16.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN17      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+17.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN18      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+18.0          'ASTREC(1)'  # C:N ratio 
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN19      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+19.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN20      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+20.0          'ASTREC(1)'  # C:N ratio 
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN21      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+21.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN22      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+22.0          'ASTREC(1)'  # C:N ratio 
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN23      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+23.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN24      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+24.0          'ASTREC(1)'  # C:N ratio 
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN25      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+25.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN26      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+26.0          'ASTREC(1)'  # C:N ratio 
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN27      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+27.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN28      Inventory_2006 07/06
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+28.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN29      Inventory_2005 08/05
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+29.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+CN30      Inventory_2006 07/06
+1.5               'OMADTYP'
+1.0           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+30.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+BSGM      us_mlra 1 grams/m^2 4/17/2003
+1               'OMADTYP'
+1             'ASTGC'
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+15.           'ASTREC(1)'  # C:N ratio, 15, is an average of types
+150.0         'ASTREC(2)'
+150.0         'ASTREC(3)'
+GRZRT    PRP GRaZing ReTurn 1 gm/m2 # We were using:
+1               'OMADTYP'
+1.0             'ASTGC'
+0.0             'ASTLBL'    # 0.0   for ASTLBL,
+0.13            'ASTLIG'    # 0.15  for ASTLIG(1),
+30.0            'ASTREC(1)'
+300.0           'ASTREC(2)' # 300.0 for ASTREC(2) and ASTREC(3).
+300.0           'ASTREC(3)'
+LETH   Organic_matter_addition   
+1.5               'OMADTYP'
+360              'ASTGC'  
+0.00            'ASTLBL' 
+0.13            'ASTLIG' 
+10.2            'ASTREC(1)'
+300.00          'ASTREC(2)'
+300.00          'ASTREC(3)'
+B440   manure Breton
+1.5                'OMADTYP'
+440               'ASTGC'  
+0.00              'ASTLBL' 
+0.13              'ASTLIG' 
+20.0              'ASTREC(1)'
+150.00            'ASTREC(2)'
+150.00            'ASTREC(3)'
+B180   manure Breton
+1.5                'OMADTYP'
+180               'ASTGC'  
+0.00              'ASTLBL' 
+0.13              'ASTLIG' 
+20.0              'ASTREC(1)'
+150.00            'ASTREC(2)'
+150.00            'ASTREC(3)'
+B175   manure Breton
+1.5                'OMADTYP'
+175               'ASTGC'  
+0.00              'ASTLBL' 
+0.13              'ASTLIG' 
+20.0              'ASTREC(1)'
+150.00            'ASTREC(2)'
+150.00            'ASTREC(3)'
+C50      Lancaster base
+1.5                'OMADTYP
+50           'ASTGC' 
+0.00          'ASTLBL'
+0.13          'ASTLIG'   #0.25  SW 200-8-1
+80.0          'ASTREC(1)'  # C:N ratio
+150.0         'ASTREC(2)'  # ?
+150.0         'ASTREC(3)'  # ?
+OTSL     MANURE  ottawa stockpiled 50 Mgha
+1.5                'OMADTYP
+88.2            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+21.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+OTSH     MANURE  ottawa stockpiled 100 Mgha
+1.5                'OMADTYP
+174.3            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+21.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+OTRL     MANURE  ottawa rotted 50 Mgha
+1.5                'OMADTYP
+100.3            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+17.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+OTRH     MANURE  ottawa rotted 100 Mgha
+1.5                'OMADTYP
+202.3            'ASTGC'
+0.0             'ASTLBL'
+0.13            'ASTLIG'   #0.25  SW 200-8-1
+17.0            'ASTREC(1)'
+150.0           'ASTREC(2)'
+150.0           'ASTREC(3)'
+R386   Organic_matter_addition_for_Rodale
+1.5                'OMADTYP
+386               'ASTGC'  
+0.00              'ASTLBL' 
+0.13              'ASTLIG' 
+16.3              'ASTREC(1)'
+300.00            'ASTREC(2)'
+300.00            'ASTREC(3)'

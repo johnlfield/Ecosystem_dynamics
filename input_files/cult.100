@@ -1,0 +1,324 @@
+W     WORM_MIXING
+0.0               'CULTRA(1)'
+0.00              'CULTRA(2)'
+0.00              'CULTRA(3)'
+0.00              'CULTRA(4)'
+0.00              'CULTRA(5)'
+0.50              'CULTRA(6)'
+0.0               'CULTRA(7)'
+1.000             'CLTEFF(1)'
+1.000             'CLTEFF(2)'
+1.000             'CLTEFF(3)'
+1.000             'CLTEFF(4)'
+A        RodWeed Row Plant  
+0.4               'CULTRA(1)'
+0.4               'CULTRA(2)'
+0.2               'CULTRA(3)'
+0.2               'CULTRA(4)'
+0.2               'CULTRA(5)'
+0.2               'CULTRA(6)'
+0.2               'CULTRA(7)'
+1.13              'CLTEFF(1)' # century 1.066
+1.13              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+1.13              'CLTEFF(4)'
+B         Planters and Cultivators
+0.0               'CULTRA(1)'
+0.0               'CULTRA(2)'
+0.0               'CULTRA(3)'
+0.5               'CULTRA(4)'
+0.5               'CULTRA(5)'
+0.5               'CULTRA(6)'
+0.0               'CULTRA(7)'
+2.04              'CLTEFF(1)' # century 1.521
+2.04              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+2.04              'CLTEFF(4)'
+C        Field Cultivators and Planters
+0.0               'CULTRA(1)'
+0.0               'CULTRA(2)'
+0.0               'CULTRA(3)'
+0.1               'CULTRA(4)'
+0.5               'CULTRA(5)'
+0.17              'CULTRA(6)'
+0.0               'CULTRA(7)'
+2.69              'CLTEFF(1)' # century 1.843
+2.69              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+2.69              'CLTEFF(4)'
+D     Field and Row Cultivators
+0.0               'CULTRA(1)'
+0.4               'CULTRA(2)'
+0.6               'CULTRA(3)'
+0.1               'CULTRA(4)'
+0.6               'CULTRA(5)'
+0.25              'CULTRA(6)'
+0.7               'CULTRA(7)'
+3.41              'CLTEFF(1)' # century 2.203
+3.41              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+3.41              'CLTEFF(4)'
+E     SWEEPS and TANDEM DISKS
+0.0               'CULTRA(1)'
+0.0               'CULTRA(2)'
+0.0               'CULTRA(3)'
+0.1               'CULTRA(4)'
+0.6               'CULTRA(5)'
+0.3               'CULTRA(6)'
+0.0               'CULTRA(7)'
+3.85              'CLTEFF(1)' # century 2.426
+3.85              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+3.85              'CLTEFF(4)'
+F     Field Cultivator and Tandem Disk
+0.0               'CULTRA(1)'
+0.05              'CULTRA(2)'
+0.2               'CULTRA(3)'
+0.05              'CULTRA(4)'
+0.2               'CULTRA(5)'
+0.37              'CULTRA(6)'
+0.3               'CULTRA(7)'
+4.52              'CLTEFF(1)' # century 2.762
+4.52              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+4.52              'CLTEFF(4)'
+G     Multiple Tandem 
+0                 'CULTRA(1)'
+0.05              'CULTRA(2)'
+0.65              'CULTRA(3)'
+0.05              'CULTRA(4)'
+0.65              'CULTRA(5)'
+0.45              'CULTRA(6)'
+0.7               'CULTRA(7)'
+5.26              'CLTEFF(1)' # century 3.132
+5.26              'CLTEFF(2)'
+1.000             'CLTEFF(3)'
+5.26              'CLTEFF(4)'
+H     DisksPoint Chisel Tandem Disk
+0.0               'CULTRA(1)'
+0.05              'CULTRA(2)'
+0.65              'CULTRA(3)'
+0.05              'CULTRA(4)'
+0.65              'CULTRA(5)'
+0.53              'CULTRA(6)'
+0.8               'CULTRA(7)'
+6.06              'CLTEFF(1)'
+6.06              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+6.06              'CLTEFF(4)' # century 3.529
+I     Offset and Tandem Disks
+0.0               'CULTRA(1)'
+0.05              'CULTRA(2)'
+0.2               'CULTRA(3)'
+0.4               'CULTRA(4)'
+0.6               'CULTRA(5)'
+0.6               'CULTRA(6)'
+0.44              'CULTRA(7)'
+6.67              'CLTEFF(1)'
+6.67              'CLTEFF(2)' # century 3.837
+1.00              'CLTEFF(3)'
+6.67              'CLTEFF(4)'
+J     Pint Chisel Offset Disk
+0.0               'CULTRA(1)'
+0.08              'CULTRA(2)'
+0.92              'CULTRA(3)'
+0.08              'CULTRA(4)'
+0.92              'CULTRA(5)'
+0.92              'CULTRA(6)'
+1.0               'CULTRA(7)'
+9.74              'CLTEFF(1)' # century 5.372
+9.74              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+9.74              'CLTEFF(4)'
+K     Moldboard Plow
+0.0               'CULTRA(1)'
+0.05              'CULTRA(2)'
+0.95              'CULTRA(3)'
+0.05              'CULTRA(4)'
+0.95              'CULTRA(5)'
+0.95              'CULTRA(6)'
+1.0               'CULTRA(7)'
+10.0              'CLTEFF(1)' # century 5.5
+10.0              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+10.0              'CLTEFF(4)'
+NOTILL            #New Notill Drill
+0.2               'CULTRA(1)' # Coverage midpoint between 10% and 30% of surface area
+0.0               'CULTRA(2)'
+0.0               'CULTRA(3)'
+0.2               'CULTRA(4)' # Coverage midpoint between 10% and 30% of surface area
+0.0               'CULTRA(5)'
+0.0               'CULTRA(6)'
+0.0               'CULTRA(7)'
+1.16              'CLTEFF(1)' # 50% mixing * 20% coverage * 32% (2.5 in) of 20cm depth
+1.16              'CLTEFF(2)' # 50% mixing * 20% coverage * 32% (2.5 in) of 20cm depth
+1.00              'CLTEFF(3)' # 50% mixing * 20% coverage * 32% (2.5 in) of 20cm depth
+1.16              'CLTEFF(4)' # 50% mixing * 20% coverage * 32% (2.5 in) of 20cm depth
+CTIL  Conventional Tillage
+0.0               CULTRA(1)
+0.05              CULTRA(2)
+0.95              CULTRA(3)
+0.05              CULTRA(4)
+0.95              CULTRA(5)
+0.95              CULTRA(6)
+1.0               CULTRA(7)
+9.74              CLTEFF(1)
+9.74              CLTEFF(2)
+1.00              CLTEFF(3)
+9.74              CLTEFF(4)
+NDRIL     NO-TILL-DRILL
+0.05              'CULTRA(1)'
+0.05              'CULTRA(2)'
+0.0               'CULTRA(3)'
+0.05              'CULTRA(4)'
+0.05              'CULTRA(5)'
+0.05              'CULTRA(6)'
+0.1               'CULTRA(7)'
+1.0               'CLTEFF(1)'
+1.0               'CLTEFF(2)'
+1.0               'CLTEFF(3)'
+1.0               'CLTEFF(4)'
+DRILL     DRILL
+0.05              'CULTRA(1)'
+0.05              'CULTRA(2)'
+0.1               'CULTRA(3)'
+0.05              'CULTRA(4)'
+0.15              'CULTRA(5)'
+0.2               'CULTRA(6)'
+0.2               'CULTRA(7)'
+1.13              'CLTEFF(1)'
+1.13              'CLTEFF(2)'
+1.1               'CLTEFF(3)'
+1.13              'CLTEFF(4)'
+HERB     HERBICIDE
+1.0               'CULTRA(1)'
+0.0               'CULTRA(2)'
+0.0               'CULTRA(3)'
+0.0               'CULTRA(4)'
+0.0               'CULTRA(5)'
+0.0               'CULTRA(6)'
+1.0               'CULTRA(7)'
+1.0               'CLTEFF(1)'
+1.0               'CLTEFF(2)'
+1.0               'CLTEFF(3)'
+1.0               'CLTEFF(4)'
+SUMF     Summer Fallow (HERBICIDE)
+0.9               'CULTRA(1)'
+0.1               'CULTRA(2)'
+0.0               'CULTRA(3)'
+0.0               'CULTRA(4)'
+0.0               'CULTRA(5)'
+0.0               'CULTRA(6)'
+1.0               'CULTRA(7)'
+1.0               'CLTEFF(1)'
+1.0               'CLTEFF(2)'
+1.0               'CLTEFF(3)'
+1.0               'CLTEFF(4)'
+SHRD Shredder
+0.1               CULTRA1 aboveground live to standing dead
+0.9               CULTRA2 aboveground live to surface litter
+0.0               CULTRA3 aboveground live to top soil layer
+0.9               CULTRA4 standing dead to surface litter
+0.0               CULTRA5 standing dead to top soil layer
+0.0               CULTRA6 surface litter to top soil layer
+0.0               CULTRA7 roots to top soil layer
+1.0               CLTEFF1 
+1.0               CLTEFF2
+1.0               CLTEFF3
+1.0               CLTEFF4
+P        PLOWING
+0.0               'CULTRA(1)'
+0.1               'CULTRA(2)'
+0.9               'CULTRA(3)'
+0.1               'CULTRA(4)'
+0.9               'CULTRA(5)'
+0.9               'CULTRA(6)'
+1.0               'CULTRA(7)'
+10.0              'CLTEFF(1)'
+10.0              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+10.0              'CLTEFF(4)'
+S     SWEEP
+0.7               'CULTRA(1)'
+0.25              'CULTRA(2)'
+0.05              'CULTRA(3)'
+0.1               'CULTRA(4)'
+0.1               'CULTRA(5)'
+0.1               'CULTRA(6)'
+1.0               'CULTRA(7)'
+3.85              'CLTEFF(1)'
+3.85              'CLTEFF(2)'
+1.0               'CLTEFF(3)'
+3.85              'CLTEFF(4)'
+CULT     CULTIVATOR
+0.0               'CULTRA(1)'
+0.5               'CULTRA(2)'
+0.5               'CULTRA(3)'
+0.5               'CULTRA(4)'
+0.5               'CULTRA(5)'
+0.5               'CULTRA(6)'
+1.0               'CULTRA(7)'
+2.69              'CLTEFF(1)'
+2.69              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+2.69              'CLTEFF(4)'
+ROW   ROW-CULTIVATOR
+0.0               'CULTRA(1)'
+0.0               'CULTRA(2)'
+0.0               'CULTRA(3)'
+0.0               'CULTRA(4)'
+0.0               'CULTRA(5)'
+0.5               'CULTRA(6)'
+0.0               'CULTRA(7)'
+3.41              'CLTEFF(1)'
+3.41              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+3.41              'CLTEFF(4)'
+R     RODWEEDER
+0.4               'CULTRA(1)'
+0.4               'CULTRA(2)'
+0.2               'CULTRA(3)'
+0.2               'CULTRA(4)'
+0.2               'CULTRA(5)'
+0.2               'CULTRA(6)'
+1.0               'CULTRA(7)'
+1.13              'CLTEFF(1)'
+1.13              'CLTEFF(2)'
+1.00              'CLTEFF(3)'
+1.13              'CLTEFF(4)'
+PINE  pineapple (slip removal)
+0.0               CULTRA1 aboveground live to standing dead
+0.3               CULTRA2 aboveground live to surface litter
+0.0               CULTRA3 aboveground live to top soil layer
+0.0               CULTRA4 standing dead to surface litter
+0.0               CULTRA5 standing dead to top soil layer
+0.0               CULTRA6 surface litter to top soil layer
+0.0               CULTRA7 roots to top soil layer
+1.0               CLTEFF1 
+1.0               CLTEFF2
+1.0               CLTEFF3
+1.0               CLTEFF4
+IK    Offset and Tandem Disks modified for 100% kill
+0.05              'CULTRA(1)'
+0.45              'CULTRA(2)'
+0.5               'CULTRA(3)'
+0.4               'CULTRA(4)'
+0.6               'CULTRA(5)'
+0.6               'CULTRA(6)'
+1.0               'CULTRA(7)'
+6.67              'CLTEFF(1)'
+6.67              'CLTEFF(2)' # century 3.837
+1.00              'CLTEFF(3)'
+6.67              'CLTEFF(4)'
+CSG    switchgrass post-harvest deadfall (from Del Grosso for Hawbecker Farm)
+1.00              'CULTRA(1)'
+0.00              'CULTRA(2)'
+0.0               'CULTRA(3)'
+0.75              'CULTRA(4)'
+0.0               'CULTRA(5)'
+0.0               'CULTRA(6)'
+0.0               'CULTRA(7)'
+1                 'CLTEFF(1)'
+1                 'CLTEFF(2)'
+1                 'CLTEFF(3)'
+1                 'CLTEFF(4)'
