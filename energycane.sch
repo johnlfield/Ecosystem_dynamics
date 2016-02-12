@@ -19,8 +19,8 @@ Year Month Option
 2045          Last year
 5             Repeats # years
 2015          Output starting year
-12            Output month
-1.0           Output interval
+11            Output month
+1.000           Output interval
 F             Weather choice
 weather.wth
 

@@ -1,5 +1,5 @@
 2015          Starting year
-2075          Last year
+2085          Last year
 site.100      Site file name
 0             Labeling type
 -1            Labeling year
@@ -16,11 +16,11 @@ DUKE          Initial tree
 
 Year Month Option
 1             Block #   loblolly pine 
-2075          Last year
+2085          Last year
 20            Repeats # years
 2015          Output starting year
-12            Output month
-1.0           Output interval
+11            Output month
+1.000           Output interval
 F             Weather choice
 weather.wth
 
