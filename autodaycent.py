@@ -14,7 +14,6 @@ with weather.wth and soils.in files and use the
 ****************************************************************************
 """
 
-from run_ddc import out_reader
 import os
 import csv
 import glob
@@ -34,7 +33,7 @@ def gm2_to_Mgha(data_list):
     return data_list
 
 
-def DDcentEVI(ddc_fpath, sch_file, target_path, id, out_files, ddclist_fpath="", bin_fpath="", site_file=False):
+def DDcentEVI(ddc_fpath, sch_file, target_path, id, out_files, ddclist_fpath="", site_file_out=False):
     """Runs the specified versions of DDcentEVI and DDClist100 for the specified schedule
     file located in the target directory, saving (renaming) all specified daily output
     files, with all output files named as per the specified ID. Note that any .out files
@@ -49,17 +48,10 @@ def DDcentEVI(ddc_fpath, sch_file, target_path, id, out_files, ddclist_fpath="",
         out_files- list of daily output .out files to save (list of str)
     """
     os.chdir(target_path)
-    if bin_fpath:
-        bin_file = bin_fpath.split('/')[-1]
-        if site_file:
-            subprocess.call("%s -s %s -n %s -i %s -W site.100 >/dev/null" % (ddc_fpath, sch_file, id, bin_file), shell=True)
-        else:
-            subprocess.call("%s -s %s -n %s -i %s >/dev/null" % (ddc_fpath, sch_file, id, bin_file), shell=True)
+    if site_file_out:
+        subprocess.call("%s -s %s -n %s -W %s.100" % (ddc_fpath, sch_file, id, id), shell=True)
     else:
-        if site_file:
-            subprocess.call("%s -s %s -n %s -W site.100 >/dev/null" % (ddc_fpath, sch_file, id), shell=True)
-        else:
-            subprocess.call("%s -s %s -n %s >/dev/null" % (ddc_fpath, sch_file, id), shell=True)
+        subprocess.call("%s -s %s -n %s" % (ddc_fpath, sch_file, id), shell=True)
     if ddclist_fpath:
         subprocess.call("%s %s %s outvars.txt" % (ddclist_fpath, id, id), shell=True)
     for file in out_files:
@@ -206,7 +198,7 @@ def yie_ghg_sum(id, work_path):
     return sum
 
 
-def bioenergy_ghg_avoid_gCO2eq_m2(biomass_gC_m2_list, conversion_tech):
+def bioenergy_ghg_avoid_gCO2eq_m2(biomass_gC_m2_array, conversion_tech):
     """Based on JohnF_BiomassBioenergy_2_9_16.xlsx
     """
     # define conversion technology-dependant constants
@@ -226,9 +218,8 @@ def bioenergy_ghg_avoid_gCO2eq_m2(biomass_gC_m2_list, conversion_tech):
     biopower_ghg_avoid_MJ = ghg_int_electricity - ghg_int_biofuel_supplychain   # gCO2eq/MJ
 
     # calculate energy production and GHG avoidance from biomass supply array
-    biomass_c_array = np.array(biomass_gC_m2_list)   # gC / m2 / y
     biomass_c_conc = 0.45
-    biomass_array = (biomass_c_array / biomass_c_conc) * 0.001   # kg biomass / m2 / y
+    biomass_array = (biomass_gC_m2_array / biomass_c_conc) * 0.001   # kg biomass / m2 / y
     biofuel_ghg_avoid_array = biomass_array * biofuel_yield * biofuel_ghg_avoid_MJ   # gCO2eq / m2 / y
     biopower_ghg_avoid_array = biomass_array * biopower_yield * biopower_ghg_avoid_MJ   # gCO2eq / m2 / y
     bioenergy_ghg_avoid_array = biofuel_ghg_avoid_array + biopower_ghg_avoid_array   # gCO2eq / m2 / y
@@ -271,12 +262,9 @@ def clean_out(work_path, move_path, save_types):
 
 def execute(base_path, sites_path, work_path, library_path, recent_path, ddc_fpath, ddclist_fpath, run_combos):
     # determine all model runs and prompt user to proceed
-    print "The following equilibrium/BAU/bioenergy file combinations will be executed: "
+    print "The following site / equilibrium / scenario combinations will be simulated: "
     for run_combo in run_combos:
-        print "   %s:  %s / %s / %s" % (run_combo[0], run_combo[1], run_combo[2], run_combo[3])
-    sites = [x.split('/')[-1] for x in os.walk(sites_path).next()[1]]
-    print "Simulations will be executed across the following sites: ", sites
-    print
+        print "   %s / %s / %s" % (run_combo[0], run_combo[1], run_combo[2])
     proceed = raw_input("Select 'q' to quit or 'enter' to proceed: ")
     if proceed == 'q':
         return
@@ -288,67 +276,36 @@ def execute(base_path, sites_path, work_path, library_path, recent_path, ddc_fpa
 
     # execute simulations
     start = time.time()
-    out_files = ['year_summary.out', 'dc_sip.csv']
-    for site in sites:
-        print "****************************************************************************"
+    for run_combo in run_combos:
+
+        # read run specifications
+        site = run_combo[1]
+        bin_file = run_combo[2].split('.')[0]+'.bin'
+        sch_file = run_combo[3]
+        bin_handle = site+'_'+bin_file.split('.')[0]
+        handle = bin_handle+'_'+sch_file.split('.')[0]
+        print "Simulating %s / %s / %s..." % (site, bin_file, sch_file)
         print
-        print "Conducting simulations for site '%s'..." % site
+
+        # define all input file paths
+        schedule_fpath = base_path+sch_file
         site_path = sites_path+site+'/'
-        site_fpath = site_path+'site.100'
+        site_fpath = site_path+bin_handle+'.100'
         weather_fpath = site_path+'weather.wth'
         soil_fpath = site_path+'soils.in'
+        binary_fpath = site_path+site+'_'+bin_file
+        if not os.path.exists(binary_fpath):
+            print "*** ERROR: No spin-up exists at ", binary_fpath
+            print
+            return
 
-        for run_combo in run_combos:
-            scenario = run_combo[0]
-            if site.startswith(scenario):
-                # determine binary off which to extend
-                binary_fpath = site_path+site+'_'+run_combo[1]
-                if os.path.exists(binary_fpath):
-                    print "*** Simulating the %s scenario extending off of binary %s..." % (scenario, binary_fpath)
-                    print
-                else:
-                    print "*** ERROR: No spin-up exists at ", binary_fpath
-                    print
-                    return
-                # initialize dynamics detail plot
-                f, panels = plt.subplots(3, sharex=True)
-
-                simulations = ['BAU', 'bioenergy']
-                colors = ['b', 'r']
-                for i, simulation in enumerate(simulations):
-                    print "******* Executing %s simulation..." % simulation
-                    print
-                    index = i+2
-                    schedule_file = run_combo[index]
-                    schedule_fpath = base_path+schedule_file
-                    handle = site+'_'+scenario+'_'+simulation
-
-                    # move files, execute simulations, add to dynamics detail plot, and clean up
-                    copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, soil_fpath, library_path)
-                    DDcentEVI(ddc_fpath, schedule_file, work_path, handle, out_files, ddclist_fpath=ddclist_fpath)
-                    print
-                    print
-                    results = read_full_out(work_path+handle+'_dc_sip.csv', 1, 0, delim='c')
-                    days = []
-                    for day in range(len(results[0])):
-                        days.append(day+1)
-                    for j, trace in enumerate([['Total C (gC/m2)', 56], ['NPP (gC/m2/d)', 31], ['Rh (gC/m2/d)', 21]]):
-                        panels[j].plot(days, results[trace[1]], label=simulation, color=colors[i])
-                        panels[j].set_ylabel(trace[0])
-                    clean_out(work_path, recent_path, ['.bin', '.lis'])
-
-                # finalize plot
-                plt.xlabel('simulation time (days)')
-                plt.suptitle("\n Scenario '%s', bioenergy (%s) vs. BAU (%s) using spin-up %s" %
-                             (scenario, run_combo[3], run_combo[2], run_combo[1]))
-                panels[0].legend(loc=4, prop={'size': 11})
-                panels[0].set_ylim([0, 16000])
-                panels[1].set_ylim([0, 10])
-                panels[2].set_ylim([0, 5])
-                # panels[2].set_xlim([0, 2000])
-                fig = matplotlib.pyplot.gcf()
-                fig.set_size_inches(12, 7)
-                f.savefig(recent_path+run_combo[0]+'_dynamics_detail.png')
+        # move files, execute simulations, and clean up
+        copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, soil_fpath, library_path)
+        os.rename(work_path+bin_handle+'.100', work_path+'site.100')
+        DDcentEVI(ddc_fpath, sch_file, work_path, handle, [], ddclist_fpath=ddclist_fpath)
+        clean_out(work_path, recent_path, ['.bin', '.lis'])
+        print
+        print
 
     # report out
     print "****************************************************************************"
@@ -360,50 +317,66 @@ def execute(base_path, sites_path, work_path, library_path, recent_path, ddc_fpa
     return
 
 
-def spinup(base_path, sites_path, work_path, library_path, ddc_fpath, ddclist_fpath):
+def spinup(base_path, sites_path, work_path, library_path, ddc_fpath, ddclist_fpath, run_combos):
     """
     """
-    # determine site for which to run spin-up, and associated input files
-    sites = [x.split('/')[-1] for x in os.walk(sites_path).next()[1]]
-    print "Please specify site number for which to run spin-up:"
-    for i, site in enumerate(sites):
-        print "   ", i, site
+    # determine spin-ups to run, and associated input files
+    spinup_combos = []
+    for run_combo in run_combos:
+        spinup_combos.append((run_combo[1], run_combo[2]))
+    unique_spinup_combos = list(set(spinup_combos))
+    unique_spinup_combos.sort()
+    print "Please specify a spin-up scenario to run, or 'a' for all:"
+    for i, combo in enumerate(unique_spinup_combos):
+        print "   ", i, combo[0], "-", combo[1]
     index = raw_input("")
-    site = sites[int(index)]
-    site_path = sites_path+site+'/'
-    print "Running spin-up for site '"+site+"'..."
-    site_fpath = site_path+'site.100'
-    weather_fpath = site_path+'weather.wth'
-    soil_fpath = site_path+'soils.in'
-    print "Please specify a schedule file for the spin-up:"
-    schedule = raw_input("")
-    schedule_fpath = base_path+schedule
+    runs = []
+    if index == 'a':
+        runs = unique_spinup_combos
+    else:
+        index = int(index)
+        runs.append(unique_spinup_combos[index])
 
-    # execute spin-up and plot som to verify equilibrium
-    start = time.time()
-    copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, soil_fpath, library_path)
-    handle = site+'_'+schedule.split('.')[0]
-    DDcentEVI(ddc_fpath, schedule, work_path, handle, [], ddclist_fpath=ddclist_fpath, site_file=True)
+    # execute all specified spin-ups
+    for run in runs:
+        site = run[0]
+        sch_file = run[1]
+        print "Running spin-up %s for site %s..." % (sch_file, site)
 
-    results = read_full_out(work_path+handle+'.lis', 3, 1)
-    years = []
-    for year in range(len(results[0])):
-        years.append(year+1)
-    plt.plot(years, results[0])
-    plt.xlabel('simulation time (years)')
-    plt.ylabel('total SOM (gC/m2)')
-    plt.savefig(handle+'.png')
-    plt.close()
+        # determine all necessary paths
+        site_path = sites_path+site+'/'
+        site_fpath = site_path+'site.100'
+        weather_fpath = site_path+'weather.wth'
+        soil_fpath = site_path+'soils.in'
+        schedule_fpath = base_path+sch_file
 
-    # clean up and report out
-    clean_out(work_path, site_path, ['.bin', '.lis', '.png', 'site.100'])
-    time_sec = round((time.time() - start), 2)
-    time_min = round(time_sec/60.0, 2)
-    print "It took %.2f minutes total to run the spin-up." % time_min
+        # execute spin-up and plot som to verify equilibrium
+        start = time.time()
+        copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, soil_fpath, library_path)
+        handle = site+'_'+sch_file.split('.')[0]
+        DDcentEVI(ddc_fpath, sch_file, work_path, handle, [], ddclist_fpath=ddclist_fpath, site_file_out=True)
+
+        results = read_full_out(work_path+handle+'.lis', 3, 1)
+        years = []
+        for year in range(len(results[1])):
+            years.append(year+1)
+        plt.plot(years, list(results[1]))
+        plt.xlabel('simulation time (years)')
+        plt.ylabel('total SOM (gC/m2)')
+        plt.savefig(handle+'.png')
+        plt.close()
+
+        # clean up and report out
+        clean_out(work_path, site_path, ['.bin', '.lis', '.png', '%s.100' % handle])
+        time_sec = round((time.time() - start), 2)
+        time_min = round(time_sec/60.0, 2)
+        print "It took %.2f minutes total to run the spin-up." % time_min
+        print
+        print
     return
 
 
-def analysis(recent_path, archive_path):
+def analysis(recent_path, archive_path, run_combos, labels):
     # create results archive
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M")
     print "Please enter a short descriptive title for this analysis run, using underscores"
@@ -417,82 +390,94 @@ def analysis(recent_path, archive_path):
     ax2 = fig.add_subplot(2, 2, 2, sharex=ax1)
     ax3 = fig.add_subplot(2, 2, 3, sharex=ax1)
 
-    # define future bioenergy crop productivity factor
-    future_productivity_increase = 2.0
+    # define structure for storing running curve minima and maxima for filling
+    array_length = 72
+    fill = {
+            "m": [[0, 0], [0, 0], [0, 0]],
+            "g": [[0, 0], [0, 0], [0, 0]],
+            # "r": [[0, 0], [0, 0], [0, 0]],
+            "b": [[0, 0], [0, 0], [0, 0]],
+            # "c": [[0, 0], [0, 0], [0, 0]]
+           }
+    for key in fill:
+        for panel in fill[key]:
+            panel[0] = [999999] * array_length
+            panel[1] = [-999999] * array_length
 
-    # search through all files in /current_results, and add traces as appropriate to Fig. 3a-b
-    suffixes = ['grass_bioenergy.lis', 'grass_BAU.lis', 'forest_BAU.lis']
-    labels = ['Perennial energy crops', 'Unmanaged grassland', 'Unmanaged forest']
-    # label_triggers = [0, 0, 0]
-    colors = ['b', 'g', 'm']
-    for file in glob.glob(os.path.join(recent_path, '*')):
-        for i, suffix in enumerate(suffixes):
-            if file.endswith(suffix):
-                file_name = file.split('/')[-1]
-                results = read_full_out(file, 3, 1)
-                years = []
-                for year in range(len(results[0])):
-                    years.append(year+1)
+    # step through run_combos, read associated output file, and add traces as appropriate to Fig. 3a-b
+    for run_combo in run_combos:
+        system, site, eq_file, sch_file, tech, panel12, panel3, color, linestyle = run_combo
+        handle = site+'_'+eq_file.split('.')[0]+'_'+sch_file.split('.')[0]
+        lis_fpath = recent_path+handle+'.lis'
 
-                # compute and plot total aboveground C
-                crmvst = np.array(results[2])
-                aglivc = np.array(results[3])
-                stdedc = np.array(results[4])
-                fbrchc = np.array(results[5])
-                rlwodc = np.array(results[6])
-                wood1c = np.array(results[7])
-                wood2c = np.array(results[8])
-                totagc = crmvst + aglivc
-                # totagc += stdedc
-                totagc += fbrchc
-                totagc += rlwodc
-                totagc += wood1c
-                totagc += wood2c
-                totagc.tolist()
-                agcacc = results[10]
-                tcrem = results[13]
+        # read all results from file
+        results = read_full_out(lis_fpath, 3, 1)
+        years = []
+        for year in range(len(results[0])):
+            years.append(year+1)
+        time = np.array(results[0])
+        somsc = np.array(results[1])
+        crmvst = np.array(results[2])
+        aglivc = np.array(results[3])
+        stdedc = np.array(results[4])
+        fbrchc = np.array(results[5])
+        rlwodc = np.array(results[6])
+        wood1c = np.array(results[7])
+        wood2c = np.array(results[8])
+        totsysc = np.array(results[9])
+        agcacc = np.array(results[10])
+        fbracc = np.array(results[11])
+        rlwacc = np.array(results[12])
+        tcrem = np.array(results[13])
 
-                # compute and plot cumulative aboveground C production (panel 1)
-                #ToDo: figure out if these two calculations are comparable...
-                if suffix.startswith('grass'):
-                    cumulative_harvestable = np.cumsum(agcacc).tolist()
-                    cumulative_harvestable = gm2_to_Mgha(cumulative_harvestable)
-                    ax1.plot(years, cumulative_harvestable, label=file_name, color=colors[i])
-                elif suffix.startswith('forest'):
-                    cumulative_harvestable = gm2_to_Mgha(totagc)
-                    ax1.plot(years, cumulative_harvestable, label=file_name, color=colors[i])
+        if panel12:
+            # compute and plot cumulative harvestable (aboveground) C production (panel 1) where appropriate
+            if system == 'grass':
+                cumulative_harvestable_gC_m2 = np.cumsum(agcacc)
+                cumulative_harvestable_MgC_ha = cumulative_harvestable_gC_m2 * 0.01
+            elif system == 'forest':
+                cumulative_harvestable_gC_m2 = fbrchc
+                cumulative_harvestable_gC_m2 += rlwodc
+                cumulative_harvestable_gC_m2 += wood1c
+                cumulative_harvestable_gC_m2 += wood2c
+                cumulative_harvestable_MgC_ha = cumulative_harvestable_gC_m2 * 0.01
+            elif system == 'bm':
+                cumulative_harvestable_gC_m2 = np.cumsum(crmvst)
+                cumulative_harvestable_MgC_ha = cumulative_harvestable_gC_m2 * 0.01
+            ax1.plot(years, cumulative_harvestable_MgC_ha, color=color, linestyle=linestyle)
+            fill[color][0][0] = np.minimum(fill[color][0][0], cumulative_harvestable_MgC_ha)
+            fill[color][0][1] = np.maximum(fill[color][0][1], cumulative_harvestable_MgC_ha)
 
-                # compute and plot total ecosystem C (panel 2)
-                totsysc = gm2_to_Mgha(list(results[9]))
-                ax2.plot(years, totsysc, label=labels[i], color=colors[i])
+            # compute and plot total ecosystem C (panel 2)
+            tot_sysC_MgC_ha = totsysc * 0.01
+            ax2.plot(years, tot_sysC_MgC_ha, color=color, linestyle=linestyle)
+            fill[color][1][0] = np.minimum(fill[color][1][0], tot_sysC_MgC_ha)
+            fill[color][1][1] = np.maximum(fill[color][1][1], tot_sysC_MgC_ha)
 
-                # compute and plot bioenergy scenario carbon benefits (panel 3)
-                #ToDo: standardize colors for biomass type / LCA combos, and linestyles for different site / initial condition combos
-                #ToDo: change looping structure to specifiy these within tuples- perhaps one control loop for each level
-                #ToDo: add fill between extremes of site / initial condition combos
-                #ToDo: get rid of the IF statements as possible; might need to specify that no calculation is done in
-                # the 0 biomass yield case for computational efficiency
-                if suffix.endswith('BAU.lis'):
-                    initial_C = totsysc[0]
-                    totsysc[:] = [((x - initial_C) * 3.67) for x in totsysc]   # gCO2eq/m2
-                    ax3.plot(years, totsysc, label=file_name, color=colors[i])
-                if suffix.endswith('bioenergy.lis'):
-                    if suffix.startswith('grass'):
-                        initial_C = totsysc[0]
-                        totsysc[:] = [((x - initial_C) * 3.67) for x in totsysc]   # gCO2eq/m2
-                        harvest_gc_m2 = np.array(agcacc) + np.array(tcrem)
-                        linestyles = ['--', '-.']
-                        for j, tech in enumerate(['current', 'mature']):
-                            if tech == 'mature':
-                                harvest_gc_m2 *= future_productivity_increase
-                            ghg_avoid_gCO2eq_m2 = bioenergy_ghg_avoid_gCO2eq_m2(harvest_gc_m2, tech)
-                            cumulative_ghg_avoid = np.cumsum(ghg_avoid_gCO2eq_m2)
-                            total_ghg_mitigation = cumulative_ghg_avoid + np.array(totsysc[:])   # gCO2eq/m2
-                            total_ghg_mitigation *= 0.01   # MgCO2eq/ha
-                            ax3.plot(years, total_ghg_mitigation, label=file_name+'-'+tech, color=colors[i],
-                                     linestyle=linestyles[j])
+        # compute and plot bioenergy scenario carbon benefits (panel 3) where appropriate
+        if panel3:
+            initial_sysC_gC_m2 = totsysc[0]
+            sysC_diff_gC_m2 = totsysc - initial_sysC_gC_m2   # np.array([((x - initial_sysC_gC_m2) * 3.67) for x in totsysc])
+            sysC_diff_gC02eq_m2 = sysC_diff_gC_m2 * 3.67
+            ghge_gCO2eq_m2 = sysC_diff_gC02eq_m2
+            if tech:
+                logistic_efficiency = 0.9
+                harvest_gc_m2 = (crmvst + tcrem) * logistic_efficiency
+                ghg_avoid_gCO2eq_m2 = bioenergy_ghg_avoid_gCO2eq_m2(harvest_gc_m2, tech)
+                cum_ghg_avoid_gCO2eq_m2 = np.cumsum(ghg_avoid_gCO2eq_m2)
+                ghge_gCO2eq_m2 += cum_ghg_avoid_gCO2eq_m2
+            ghge_MgCO2eq_ha = ghge_gCO2eq_m2 * 0.01
+            ax3.plot(years, ghge_MgCO2eq_ha, color=color, linestyle=linestyle)
+            fill[color][2][0] = np.minimum(fill[color][2][0], ghge_MgCO2eq_ha)
+            fill[color][2][1] = np.maximum(fill[color][2][1], ghge_MgCO2eq_ha)
 
-    # # finalize plot
+    # add fill
+    for color in fill:
+        ax1.fill_between(years, fill[color][0][0], fill[color][0][1], facecolor=color, alpha=0.15, linewidth=0.0)
+        ax2.fill_between(years, fill[color][1][0], fill[color][1][1], facecolor=color, alpha=0.15, linewidth=0.0)
+        ax3.fill_between(years, fill[color][2][0], fill[color][2][1], facecolor=color, alpha=0.15, linewidth=0.0)
+
+    # update plot formatting and add axis labels
     matplotlib.rcParams.update({'font.size': 10})
     ax1.set_title("Cumulative harvestable NPP", size=11, fontweight='bold')
     ax1.set_ylabel("MgC / ha")
@@ -501,12 +486,20 @@ def analysis(recent_path, archive_path):
     ax3.set_title("Cumulative GHGE benefit", size=11, fontweight='bold')
     ax3.set_ylabel("MgCO2eq / ha")
     ax3.set_xlabel("Time after harvest/LUC (years)", size=10)
+
+    # add legend
+    dummy_point = (-1, -1)
+    for entry in labels:
+        label, color, linestyle = entry
+        ax3.plot(dummy_point[0], dummy_point[1], label=label, color=color, linestyle=linestyle)
     ax3.legend(bbox_to_anchor=(1.05, 1), loc=2, prop={'size': 10})
+
+    # save figure and report out
     plt.savefig(results_path+'Fig3.png')
     shutil.copy(results_path+'Fig3.png', archive_path+'Fig3.png')
     plt.close()
     results_path = results_path.split('/')[-2]
-    print "All resulting data & metadata is archived in the directory "+results_path
+    print "Resulting figure is archived in the directory "+results_path
     return
 
 
@@ -525,9 +518,45 @@ ddclist_fpath = base_path+"model/DDClist100"
 recent_path = base_path+"current_results/"
 archive_path = base_path+"results_archive/"
 
-# define analysis scenarios
-run_combos = [('forest', 'pine_eq.bin', 'pine.sch', 'pine_rot.sch'),
-              ('grass', 'graze_eq.bin', 'grass.sch', 'switchgrass.sch')]
+# define model runs in tuple format
+#             (system,   site, spin-up.bin,                simulation.sch,            tech,       ax1/2,  ax3, color, linestyle)
+run_combos = [
+              ('forest', 'IA', 'forest_medSOCcrop_eq.sch',        'forest.sch',          '',        True,  True, 'm',  '-'),  # Unmanaged forest regrowth, Iowa, young stand
+              ('forest', 'IA', 'forest_medSOCcrop_forest_eq.sch', 'forest.sch',          '',        True,  True, 'm', '-.'),  # Unmanaged forest regrowth, Iowa, 70yo stand
+              ('forest', 'LA', 'forest_medSOCcrop_eq.sch',        'forest.sch',          '',        True,  True, 'm', '--'),  # Unmanaged forest regrowth, Louisiana, young stand
+              ('forest', 'LA', 'forest_medSOCcrop_forest_eq.sch', 'forest.sch',          '',        True,  True, 'm',  ':'),  # Unmanaged forest regrowth, Louisiana, 70yo stand
+
+              ('grass',  'IA', 'grass_lowSOCcrop_eq.sch',         'grass.sch',          '',        True,  True, 'g',  '-'),  # Unmanaged grassland regrowth, Iowa, low-SOC soil
+              ('grass',  'IA', 'grass_medSOCcrop_eq.sch',         'grass.sch',          '',        True,  True, 'g', '-.'),  # Unmanaged grassland regrowth, Iowa, medium-SOC soil
+              ('grass',  'LA', 'grass_lowSOCcrop_eq.sch',         'grass.sch',          '',        True,  True, 'g', '--'),  # Unmanaged grassland regrowth, Louisiana, low-SOC soil
+              ('grass',  'LA', 'grass_medSOCcrop_eq.sch',         'grass.sch',          '',        True,  True, 'g',  ':'),  # Unmanaged grassland regrowth, Louisiana, medium-SOC soil
+
+              # ('forest', 'IA', 'decid_eq.sch',                    'forest_harv.sch',     'current', False, True, 'r', '--'),  # Forest bioenergy, Iowa, current technology
+              # ('forest', 'LA', 'decid_eq.sch',                    'forest_harv.sch',     'current', False, True, 'r',  '-'),  # Forest bioenergy, Louisiana, current technology
+
+              ('bm',  'IA', 'grass_lowSOCcrop_eq.sch',         'switchgrass_IA.sch', 'current', True,  True, 'b',  '-'),  # Grass bioenergy, Iowa, low-SOC soil, current technology
+              ('bm',  'IA', 'grass_medSOCcrop_eq.sch',         'switchgrass_IA.sch', 'current', True,  True, 'b', '-.'),  # Grass bioenergy, Iowa, medium-SOC soil, current technology
+              ('bm',  'LA', 'grass_lowSOCcrop_eq.sch',         'switchgrass_LA.sch', 'current', True,  True, 'b', '--'),  # Grass bioenergy, Louisiana, low-SOC soil, current technology
+              ('bm',  'LA', 'grass_medSOCcrop_eq.sch',         'switchgrass_LA.sch', 'current', True,  True, 'b',  ':'),  # Grass bioenergy, Louisiana, medium-SOC soil, current technology
+
+              # ('grass',  'IA', 'grass_lowSOCcrop_eq.sch',         'switchgrass_IA.sch', 'mature',  False, True, 'c',  '-'),  # Grass bioenergy, Iowa, low-SOC soil, mature technology
+              # ('grass',  'IA', 'grass_medSOCcrop_eq.sch',         'switchgrass_IA.sch', 'mature',  False, True, 'c', '-.'),  # Grass bioenergy, Iowa, medium-SOC soil, mature technology
+              # ('grass',  'LA', 'grass_lowSOCcrop_eq.sch',         'switchgrass_LA.sch', 'mature',  False, True, 'c', '--'),  # Grass bioenergy, Louisiana, low-SOC soil, mature technology
+              # ('grass',  'LA', 'grass_medSOCcrop_eq.sch',         'switchgrass_LA.sch', 'mature',  False, True, 'c',  ':')   # Grass bioenergy, Louisiana, medium-SOC soil, mature technology
+              ]
+
+labels = [('Line colors:', 'None', 'None'),
+          (' Unmanaged forest regrowth', 'm', '-'),
+          (' Unmanaged grassland regrowth', 'g', '-'),
+          (' Forest bioenergy', 'r', '-'),
+          (' Grass bioenergy, current technology', 'b', '-'),
+          #('Grass bioenergy, future technology', 'c', '-'),
+
+          ('Line styles:', 'None', 'None'),
+          (' Iowa, young stand or low-SOC soil', 'k', '-'),
+          (' Iowa, 70yo stand or medium-SOC soil', 'k', '-.'),
+          (' Louisiana, young stand or low-SOC soil', 'k', '--'),
+          (' Louisiana, 70yo stand or medium-SOC soil', 'k', ':')]
 
 # initiate interactive routine
 prompt = """
@@ -553,11 +582,11 @@ while True:
     elif command == 's':
         print "   Running DayCent model spin-up..."
         print
-        spinup(base_path, sites_path, work_path, library_path, ddc_fpath, ddclist_fpath)
+        spinup(base_path, sites_path, work_path, library_path, ddc_fpath, ddclist_fpath, run_combos)
     elif command == 'a':
         print "   Analyzing current simulation results set..."
         print
-        analysis(recent_path, archive_path)
+        analysis(recent_path, archive_path, run_combos, labels)
     elif command == 'q':
         print "   Quitting..."
         print
@@ -566,9 +595,7 @@ while True:
 
 
 
-
-
-#ToDO: update this to generate output commensurate with manuscript Table 1
+#ToDo: update this to generate output commensurate with manuscript Table 1
 # #report analysis and log analysis runtime, results summary, and results archive location
 # c = open(dirwork+resfile, "w")
 # c.write("Analysis timstamp:  "+tstamp+'\n')
@@ -603,3 +630,65 @@ while True:
 #                 stats[j][6], stats[j][7], stats[j][8])
 #     c.write(line)
 # c.close()
+
+#ToDo: this is orphaned code associated with generation bioenergy & BAU NPP, Rh, and total system C
+# for site in sites:
+#         print "****************************************************************************"
+#         print
+#         print "Conducting simulations for site '%s'..." % site
+#         site_path = sites_path+site+'/'
+#         site_fpath = site_path+'site.100'
+#         weather_fpath = site_path+'weather.wth'
+#         soil_fpath = site_path+'soils.in'
+#
+#         for run_combo in run_combos:
+#             scenario = run_combo[0]
+#             if site.startswith(scenario):
+#                 # determine binary off which to extend
+#                 binary_fpath = site_path+site+'_'+run_combo[1]
+#                 if os.path.exists(binary_fpath):
+#                     print "*** Simulating the %s scenario extending off of binary %s..." % (scenario, binary_fpath)
+#                     print
+#                 else:
+#                     print "*** ERROR: No spin-up exists at ", binary_fpath
+#                     print
+#                     return
+#                 # initialize dynamics detail plot
+#                 f, panels = plt.subplots(3, sharex=True)
+#
+#                 simulations = ['BAU', 'bioenergy']
+#                 colors = ['b', 'r']
+#                 for i, simulation in enumerate(simulations):
+#                     print "******* Executing %s simulation..." % simulation
+#                     print
+#                     index = i+2
+#                     schedule_file = run_combo[index]
+#                     schedule_fpath = base_path+schedule_file
+#                     handle = site+'_'+scenario+'_'+simulation
+#
+#                     # move files, execute simulations, add to dynamics detail plot, and clean up
+#                     copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, soil_fpath, library_path)
+#                     DDcentEVI(ddc_fpath, schedule_file, work_path, handle, out_files, ddclist_fpath=ddclist_fpath)
+#                     print
+#                     print
+#                     results = read_full_out(work_path+handle+'_dc_sip.csv', 1, 0, delim='c')
+#                     days = []
+#                     for day in range(len(results[0])):
+#                         days.append(day+1)
+#                     for j, trace in enumerate([['Total C (gC/m2)', 56], ['NPP (gC/m2/d)', 31], ['Rh (gC/m2/d)', 21]]):
+#                         panels[j].plot(days, results[trace[1]], label=simulation, color=colors[i])
+#                         panels[j].set_ylabel(trace[0])
+#                     clean_out(work_path, recent_path, ['.bin', '.lis'])
+#
+#                 # finalize plot
+#                 plt.xlabel('simulation time (days)')
+#                 plt.suptitle("\n Scenario '%s', bioenergy (%s) vs. BAU (%s) using spin-up %s" %
+#                              (scenario, run_combo[3], run_combo[2], run_combo[1]))
+#                 panels[0].legend(loc=4, prop={'size': 11})
+#                 panels[0].set_ylim([0, 16000])
+#                 panels[1].set_ylim([0, 10])
+#                 panels[2].set_ylim([0, 5])
+#                 # panels[2].set_xlim([0, 2000])
+#                 fig = matplotlib.pyplot.gcf()
+#                 fig.set_size_inches(12, 7)
+#                 f.savefig(recent_path+run_combo[0]+'_dynamics_detail.png')
