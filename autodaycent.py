@@ -23,8 +23,35 @@ import time
 import datetime
 import matplotlib
 # matplotlib.use('Agg')
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+def stacked_line_plot(axis_object, xs, ys_list, color_hatch_label_list, legend=False):
+    previous_cum_y = []
+    current_cum_y = []
+    for i, ys in enumerate(ys_list):
+        if i == 0:
+            current_cum_y = ys
+            color, hatch, label = color_hatch_label_list[i]
+            axis_object.plot(xs, ys, color=color)
+            previous_cum_y = ys
+        else:
+            current_cum_y += ys
+            color, hatch, label = color_hatch_label_list[i-1]
+            axis_object.plot(xs, current_cum_y, color=color)
+            if hatch:
+                axis_object.fill_between(xs, current_cum_y, ys_list[0], facecolor='none', hatch=hatch, edgecolor=color,
+                                         zorder=-i)
+                axis_object.bar([0], [0], facecolor='none', hatch=hatch, edgecolor=color, label=label)
+            else:
+                axis_object.fill_between(xs, current_cum_y, ys_list[0], facecolor=color, linewidth=0.0, zorder=-i)
+                axis_object.bar([0], [0], color=color, label=label)
+            previous_cum_y = current_cum_y
+    axis_object.plot(xs, current_cum_y, color='k', label='Cumulative NPP')
+    if legend:
+        axis_object.legend(loc=2, prop={'size': 7.5})
 
 
 def gm2_to_Mgha(data_list):
@@ -302,8 +329,8 @@ def execute(base_path, sites_path, work_path, library_path, recent_path, ddc_fpa
         # move files, execute simulations, and clean up
         copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, soil_fpath, library_path)
         os.rename(work_path+bin_handle+'.100', work_path+'site.100')
-        DDcentEVI(ddc_fpath, sch_file, work_path, handle, [], ddclist_fpath=ddclist_fpath)
-        clean_out(work_path, recent_path, ['.bin', '.lis'])
+        DDcentEVI(ddc_fpath, sch_file, work_path, handle, ['dc_sip.csv'], ddclist_fpath=ddclist_fpath)
+        clean_out(work_path, recent_path, ['.bin', '.lis', 'dc_sip.csv'])
         print
         print
 
@@ -383,49 +410,78 @@ def analysis(recent_path, archive_path, run_combos, labels):
     description = raw_input("in place of spaces:  ")
     results_path = archive_path+timestamp+"_"+description+"/"
     os.mkdir(results_path)
+
+    # set up results output files
     out_fpath = results_path+"Table.csv"
-    header = ["Simulation", "Avg. harvestable NPP (MgC/ha/y)", "Avg. SOC change (MgC/ha/y)",
-              "Avg. system C change (MgCO2eq/ha/y)", "Avg. biomass harvest (Mg biomass/ha/y)",
-              "Avg. bioenergy GHGE avoidance (MgCO2eq/ha/y)", "Avg. total GHGE mitigation (MgCO2eq/ha/y)"]
+    header = ["Simulation",
+              "Avg. harvestable NPP (MgC/ha/y)",
+              "Avg. SOC change (MgC/ha/y)",
+              "Avg. system C change (MgCO2eq/ha/y)",
+              "Avg. biomass harvest (Mg biomass/ha/y)",
+              "Avg. bioenergy GHGE avoidance (MgCO2eq/ha/y)",
+              "Avg. total GHGE mitigation (MgCO2eq/ha/y)"]
     out_file_object = open(out_fpath, "wb")
     c = csv.writer(out_file_object)
     c.writerow(header)
 
-    # initialize Fig. 3a-b
-    fig = plt.figure()
-    ax1 = fig.add_subplot(2, 2, 1)
-    ax2 = fig.add_subplot(2, 2, 2, sharex=ax1)
-    ax3 = fig.add_subplot(2, 2, 3, sharex=ax1)
+    bar_out_fpath = results_path+"Bar_plot.csv"
+    bar_header = ["Avg. BGC accumulation (MgC/ha/y)",
+                  "Avg. AGC accumulation (MgC/ha/y)",
+                  "Avg. harvest (MgC/ha/y)",
+                  "Avg. respiration & losses (MgC/ha/y)",
+                  "Avg. NPP (MgC/ha/y)",
+                  "Ecosystem GHG mitigation (MgCO2eq/ha/y)",
+                  "Bioenergy GHG mitigation (MgCO2eq/ha/y)",
+                  "Simulation"]
+    bar_out_file_object = open(bar_out_fpath, "wb")
+    d = csv.writer(bar_out_file_object)
+    d.writerow(bar_header)
+
+    # initialize Figures
+    fig0 = plt.figure(0)
+    ax1 = fig0.add_subplot(2, 2, 1)
+    ax2 = fig0.add_subplot(2, 2, 2, sharex=ax1)
+    ax3 = fig0.add_subplot(2, 2, 3, sharex=ax1)
+
+    plt.figure(1)
+    gs1 = gridspec.GridSpec(2, 1)
+    gs1.update(right=0.4)
+    gs2 = gridspec.GridSpec(4, 1)
+    gs2.update(left=0.55, hspace=0.45)
+    ax4 = plt.subplot(gs1[0, 0])
+    ax5 = plt.subplot(gs2[0, 0])
+    ax6 = plt.subplot(gs2[1, 0], sharex=ax5, sharey=ax5)
+    ax7 = plt.subplot(gs2[2:, 0])
+
+    # define structure for saving stacked bar chart data [[avg_BGs], [avg_AGs], [avg_harvs], [avg_resp],
+    #                                                     [ecosystem GHGE mitigation], [bioenergy GHGEM], [ticks]]
+    bar_data = [[], [], [], [], [], [], [], []]
 
     # define structure for storing running curve minima and maxima for filling
-    array_length = 72
     fill = {
-            "m": [[0, 0], [0, 0], [0, 0]],
-            "g": [[0, 0], [0, 0], [0, 0]],
-            "r": [[0, 0], [0, 0], [0, 0]],
-            "b": [[0, 0], [0, 0], [0, 0]],
-            # "c": [[0, 0], [0, 0], [0, 0]]
+            "m": [[[], []], [[], []], [[], []]],
+            "g": [[[], []], [[], []], [[], []]],
+            "r": [[[], []], [[], []], [[], []]],
+            "b": [[[], []], [[], []], [[], []]]
            }
-    panel12_fill = {
-                    "m": True,
-                    "g": True,
-                    "r": False,
-                    "b": True
-                    }
-    for key in fill:
-        for panel in fill[key]:
-            panel[0] = [999999] * array_length
-            panel[1] = [-999999] * array_length
+    # panel12_fill = {
+    #                 "m": True,
+    #                 "g": True,
+    #                 "r": False,
+    #                 "b": True
+    #                 }
 
-    # step through run_combos, read associated output file, and add traces as appropriate to Fig. 3a-b
+    # step through run_combos, read associated output files, process results, and add to figures as appropriate
     for run_combo in run_combos:
-        system, site, eq_file, sch_file, tech, panel12, panel3, color, linestyle = run_combo
+        system, site, eq_file, sch_file, tech, panel12, panel5, panel6, panel3, color, linestyle = run_combo
         handle = site+'_'+eq_file.split('.')[0]+'_'+sch_file.split('.')[0]
+        print "Processing case %s..." % handle
         lis_fpath = recent_path+handle+'.lis'
-        summary = [handle]
+        dc_sip_fpath = recent_path+handle+'_dc_sip.csv'
+        summary = [handle]   # data structure for tabular output
 
-        # read all results from file
-        results = read_full_out(lis_fpath, 3, 1)
+        ### process ANNUAL .lis output ################################################################################
+        results = read_full_out(lis_fpath, 4, 1)
         years = []
         for year in range(len(results[0])):
             years.append(year+1)
@@ -444,7 +500,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
         rlwacc = np.array(results[12])
         tcrem = np.array(results[13])
 
-        # compute cumulative harvestable (aboveground) C production, and record average
+        # compute cumulative harvestable (aboveground) C production from ANNUAL output
         if system == 'grass':
             cumulative_harvestable_gC_m2 = np.cumsum(agcacc)
             cumulative_harvestable_MgC_ha = cumulative_harvestable_gC_m2 * 0.01
@@ -459,18 +515,14 @@ def analysis(recent_path, archive_path, run_combos, labels):
             cumulative_harvestable_MgC_ha = cumulative_harvestable_gC_m2 * 0.01
         summary.append(round(cumulative_harvestable_MgC_ha[-1]/float(len(cumulative_harvestable_MgC_ha)), 3))
 
-        # compute SOC and total ecosystem C, and record averages
+        # compute SOC and total ecosystem C from ANNUAL output
         tot_SOC_MgC_ha = somsc * 0.01
         summary.append(round(np.mean(np.diff(tot_SOC_MgC_ha)), 4))
         tot_sysC_MgC_ha = totsysc * 0.01
         summary.append(round(np.mean(np.diff(tot_sysC_MgC_ha)) * 3.67, 3))
 
-        # compute and plot mitigation from ecosystem C changes and bioenergy production
-        initial_sysC_gC_m2 = totsysc[0]
-        sysC_diff_gC_m2 = totsysc - initial_sysC_gC_m2
-        sysC_diff_gC02eq_m2 = sysC_diff_gC_m2 * 3.67
-        ghge_gCO2eq_m2 = sysC_diff_gC02eq_m2
-        wood_harvest = np.array([0])
+        # compute harvest from ANNUAL output
+        wood_harvest = np.array(tcrem[0])
         wood_harvest = np.append(wood_harvest, np.diff(tcrem))
         logistic_efficiency = 0.9
         harvest_gc_m2 = (crmvst + wood_harvest) * logistic_efficiency
@@ -480,40 +532,224 @@ def analysis(recent_path, archive_path, run_combos, labels):
                 nonzero_harvest_gc_m2.append(harvest)
         avg_harvest_gC_m2 = np.sum(nonzero_harvest_gc_m2) / float(len(nonzero_harvest_gc_m2))
         summary.append(round((avg_harvest_gC_m2*0.01)/0.45, 3))
+
+        ### process DAILY dc_sip.csv output ###########################################################################
+        more_results = read_full_out(dc_sip_fpath, 1, 0, delim='c')
+        days = []
+        zeros = []
+        for day in range(len(more_results[0])):
+            days.append((day+1)/365.0)
+            zeros.append(0)
+        NPP = np.array(more_results[31])
+        aglivc = np.array(more_results[33])
+        bglivcj = np.array(more_results[34])
+        bglivcm = np.array(more_results[35])
+        rleavc = np.array(more_results[36])
+        frootcj = np.array(more_results[37])
+        frootcm = np.array(more_results[38])
+        fbrchc = np.array(more_results[39])
+        rlwodc = np.array(more_results[40])
+        crootc = np.array(more_results[41])
+        tlai = np.array(more_results[42])
+        stdedc = np.array(more_results[43])
+        wood1c = np.array(more_results[44])   # dead fine branches
+        wood2c = np.array(more_results[45])   # dead large wood
+        wood3c = np.array(more_results[46])   # dead coarse roots
+        strucc1 = np.array(more_results[47])  # 1=surface, 2=soil
+        metabc1 = np.array(more_results[48])
+        strucc2 = np.array(more_results[49])
+        metabc2 = np.array(more_results[50])
+        som1c1 = np.array(more_results[51])
+        som1c2 = np.array(more_results[52])
+        som2c1 = np.array(more_results[53])
+        som2c2 = np.array(more_results[54])
+        som3c = np.array(more_results[55])
+
+        # compute aboveground and belowground totals from DAILY output
+        AG = aglivc
+        AG += rleavc
+        AG += fbrchc
+        AG += rlwodc
+        AG += stdedc
+        AG += wood1c
+        AG += wood2c
+        AG += strucc1
+        AG += metabc1
+
+        BG = bglivcj
+        BG += bglivcm
+        BG += frootcj
+        BG += frootcm
+        BG += crootc
+        BG += wood3c
+        BG += strucc2
+        BG += metabc2
+        BG += som1c1
+        BG += som1c2
+        BG += som2c1
+        BG += som2c2
+        BG += som3c
+
+        # compute cumulative sum arrays, net change arrays, and perform unit conversions from DAILY output
+        cum_NPP = np.cumsum(NPP) * 0.01
+        initial_AG = AG[0]
+        net_AG = np.array([x-initial_AG for x in AG]) * 0.01
+        initial_BG = BG[0]
+        net_BG = np.array([x-initial_BG for x in BG]) * 0.01
+        cum_loss = cum_NPP - net_AG
+        cum_loss -= net_BG
+        net_eco_MgC_ha = net_AG + net_BG
+        ghge_MgCO2eq_ha = [x*3.67 for x in net_eco_MgC_ha]
+        avg_ecosystem_mitigation = ghge_MgCO2eq_ha[-1] / float(days[-1])
+        bar_data[5].append(avg_ecosystem_mitigation)
+
+        ### compute and plot mitigation from ecosystem C changes and bioenergy production #############################
+        # update harvest array from annual to daily basis
+        daily_harvest_g_m2 = []
+        daily_counter = 0
+        annual_counter = 0
+        harvest_doy = 230
+        for k in range(len(days)):
+            if k % 365 == 0:
+                daily_counter = 0
+            if daily_counter == harvest_doy:
+                daily_harvest_g_m2.append(harvest_gc_m2[annual_counter])
+                annual_counter += 1
+            else:
+                daily_harvest_g_m2.append(0)
+            daily_counter += 1
+        daily_harvest_g_m2 = np.array(daily_harvest_g_m2)
+
+        # compute bioenergy GHG mitigation
         if tech:
-            ghg_avoid_gCO2eq_m2 = bioenergy_ghg_avoid_gCO2eq_m2(harvest_gc_m2, tech)
+            ghg_avoid_gCO2eq_m2 = bioenergy_ghg_avoid_gCO2eq_m2(daily_harvest_g_m2, tech)
             nonzero_ghg_avoid_gCO2eq_m2 = []
             for ghge in ghg_avoid_gCO2eq_m2:
                 if ghge > 0:
                     nonzero_ghg_avoid_gCO2eq_m2.append(ghge)
             summary.append(round((np.sum(nonzero_ghg_avoid_gCO2eq_m2)/float(len(nonzero_ghg_avoid_gCO2eq_m2)))*0.01, 3))
             cum_ghg_avoid_gCO2eq_m2 = np.cumsum(ghg_avoid_gCO2eq_m2)
-            ghge_gCO2eq_m2 += cum_ghg_avoid_gCO2eq_m2
+            cum_ghg_avoid_MgCO2eq_ha = cum_ghg_avoid_gCO2eq_m2 *0.01
+            ghge_MgCO2eq_ha += cum_ghg_avoid_MgCO2eq_ha
+            avg_bioenergy_mitigation = cum_ghg_avoid_MgCO2eq_ha[-1] / float(days[-1])
+            bar_data[6].append(avg_bioenergy_mitigation)
         else:
             summary.append(0)
-        ghge_MgCO2eq_ha = ghge_gCO2eq_m2 * 0.01
+            bar_data[6].append(0)
         summary.append(round(np.mean(np.diff(ghge_MgCO2eq_ha)), 3))
 
         # record results to file, and add to plot where appropriate
         c.writerow(summary)
+        plt.figure(0)
         if panel12:
             ax1.plot(years, cumulative_harvestable_MgC_ha, color=color, linestyle=linestyle)
-            fill[color][0][0] = np.minimum(fill[color][0][0], cumulative_harvestable_MgC_ha)
-            fill[color][0][1] = np.maximum(fill[color][0][1], cumulative_harvestable_MgC_ha)
+            if list(fill[color][0][0]):
+                fill[color][0][0] = np.minimum(fill[color][0][0], cumulative_harvestable_MgC_ha)
+            else:
+                fill[color][0][0] = cumulative_harvestable_MgC_ha
+            if list(fill[color][0][1]):
+                fill[color][0][1] = np.maximum(fill[color][0][1], cumulative_harvestable_MgC_ha)
+            else:
+                fill[color][0][1] = cumulative_harvestable_MgC_ha
             ax2.plot(years, tot_sysC_MgC_ha, color=color, linestyle=linestyle)
-            fill[color][1][0] = np.minimum(fill[color][1][0], tot_sysC_MgC_ha)
-            fill[color][1][1] = np.maximum(fill[color][1][1], tot_sysC_MgC_ha)
+            if list(fill[color][1][0]):
+                fill[color][1][0] = np.minimum(fill[color][1][0], tot_sysC_MgC_ha)
+            else:
+                fill[color][1][0] = tot_sysC_MgC_ha
+            if list(fill[color][1][1]):
+                fill[color][1][1] = np.maximum(fill[color][1][1], tot_sysC_MgC_ha)
+            else:
+                fill[color][1][1] = tot_sysC_MgC_ha
         if panel3:
-            ax3.plot(years, ghge_MgCO2eq_ha, color=color, linestyle=linestyle)
-            fill[color][2][0] = np.minimum(fill[color][2][0], ghge_MgCO2eq_ha)
-            fill[color][2][1] = np.maximum(fill[color][2][1], ghge_MgCO2eq_ha)
+            ax3.plot(days, ghge_MgCO2eq_ha, color=color, linestyle=linestyle)
+            ax7.plot(days, ghge_MgCO2eq_ha, color=color, linestyle=linestyle)
+            if list(fill[color][2][0]):
+                fill[color][2][0] = np.minimum(fill[color][2][0], ghge_MgCO2eq_ha)
+            else:
+                fill[color][2][0] = ghge_MgCO2eq_ha
+            if list(fill[color][2][1]):
+                fill[color][2][1] = np.maximum(fill[color][2][1], ghge_MgCO2eq_ha)
+            else:
+                fill[color][2][1] = ghge_MgCO2eq_ha
 
-    # add fill
+        # add to stack bar chart data structure
+        avg_NPP = cum_NPP[-1] / float(days[-1])
+        avg_BG = net_BG[-1] / float(days[-1])
+        avg_AG = net_AG[-1] / float(days[-1])
+        avg_harv = np.mean(harvest_gc_m2) * 0.01
+        avg_resp = (cum_loss[-1] / float(days[-1])) - avg_harv
+        bar_data[0].append(avg_BG)
+        bar_data[1].append(avg_AG)
+        bar_data[2].append(avg_harv)
+        bar_data[3].append(avg_resp)
+        bar_data[4].append(avg_NPP)
+        bar_data[7].append(handle)
+
+        # plot dynamics details where appropriate
+        start = 0
+        end = 1200
+        if panel5:
+            stacked_line_plot(ax5,
+                              days[start:end],
+                              [zeros[start:end], net_BG[start:end], net_AG[start:end], cum_loss[start:end]],
+                              [('g', '', 'belowground C'), ('g', '///', 'aboveground C'), ('w', '', 'respiration/losses')],
+                              legend=True)
+        if panel6:
+            stacked_line_plot(ax6,
+                              days[start:end],
+                              [zeros[start:end], net_BG[start:end], net_AG[start:end], cum_loss[start:end]],
+                              [('m', '', 'belowground C'), ('m', '///', 'aboveground C'), ('w', '', 'respiration/losses')])
+
+    ### finalize figure formatting ###################################################################################
+    # create upper left stacked bar chart
+    bar_colors_labels = [('k', 'belowground C'), ('c', 'aboveground C'), ('r', 'harvest'), ('w', 'respiration/losses')]
+    increment = range(len(bar_data[0]))
+    width = 0.75
+    bottoms = []
+    for a in increment:
+        bottoms.append(0)
+    for i, color_label in enumerate(bar_colors_labels):
+        color, label = color_label
+        ax4.bar(increment, bar_data[i], width=width, bottom=bottoms, color=color, label=label)
+        for j in range(len(bottoms)):
+            bottoms[j] += bar_data[i][j]
+    for k in increment:
+        increment[k] += width/2.0
+    ax4.set_xticks(increment, bar_data[4])
+    ax4.set_xticklabels(bar_data[4], rotation=90, )
+    ax4.legend(loc=2, prop={'size': 7.5})
+
+    # write bar chart output to file for use in Excel
+    bar_data = zip(*bar_data)
+    for line in bar_data:
+        d.writerow(line)
+
+    # add fill to lower left time-series plot
+    print
+    print "Filling..."
     for color in fill:
-        if panel12_fill[color]:
+        print color
+        print len(years)
+        print len(fill[color][0][0])
+        print len(fill[color][0][1])
+        print len(fill[color][1][0])
+        print len(fill[color][1][1])
+        print
+        print len(days)
+        print len(fill[color][2][0])
+        print len(fill[color][2][1])
+        print
+        print
+        if list(fill[color][0][0]):
             ax1.fill_between(years, fill[color][0][0], fill[color][0][1], facecolor=color, alpha=0.15, linewidth=0.0)
+        if list(fill[color][1][0]):
             ax2.fill_between(years, fill[color][1][0], fill[color][1][1], facecolor=color, alpha=0.15, linewidth=0.0)
-        ax3.fill_between(years, fill[color][2][0], fill[color][2][1], facecolor=color, alpha=0.15, linewidth=0.0)
+        if list(fill[color][2][0]):
+            days = []
+            for day in range(len(fill[color][2][0])):
+                days.append((day+1)/365.0)
+            ax3.fill_between(days, fill[color][2][0], fill[color][2][1], facecolor=color, alpha=0.15, linewidth=0.0)
+            ax7.fill_between(days, fill[color][2][0], fill[color][2][1], facecolor=color, alpha=0.15, linewidth=0.0)
 
     # update plot formatting and add axis labels
     matplotlib.rcParams.update({'font.size': 10})
@@ -524,21 +760,40 @@ def analysis(recent_path, archive_path, run_combos, labels):
     ax3.set_title("Cumulative GHGE benefit", size=11, fontweight='bold')
     ax3.set_ylabel("MgCO2eq / ha")
     ax3.set_xlabel("Time after harvest/LUC (years)", size=10)
+    ax4.set_title("Avgerage NPP & fate of C",  size=11, fontweight='bold')
+    ax4.set_ylabel("MgC/ha/y", size=10)
+    ax5.set_title("NPP & fate of C dynamics detail",  size=11, fontweight='bold')
+    ax5.set_ylabel("MgC/ha                                  .", size=10)
+    ax5.set_xlabel("Time after harvest/LUC (years)", size=10)
+    ax7.set_title("Cumulative GHGE benefit", size=11, fontweight='bold')
+    ax7.set_ylabel("MgCO2eq / ha")
+    ax7.set_xlabel("Time after harvest/LUC (years)", size=10)
 
     # add legend
     dummy_point = (-1, -1)
     for entry in labels:
         label, color, linestyle = entry
         ax3.plot(dummy_point[0], dummy_point[1], label=label, color=color, linestyle=linestyle)
-    ax3.legend(bbox_to_anchor=(1.05, 1), loc=2, prop={'size': 10})
+    for entry in labels:
+        label, color, linestyle = entry
+        ax7.plot(dummy_point[0], dummy_point[1], label=label, color=color, linestyle=linestyle)
+    ax3.legend(bbox_to_anchor=(1.05, 0.9), loc=2, prop={'size': 8.5})
+    ax7.legend(loc=4, prop={'size': 7.5})
 
     # save figure, table, and report out
     out_file_object.close()
     shutil.copy(results_path+'Table.csv', archive_path+'Table.csv')
+    bar_out_file_object.close()
+    shutil.copy(results_path+'Bar_plot.csv', archive_path+'Bar_plot.csv')
+    plt.figure(0)
     plt.savefig(results_path+'Fig3.png')
     shutil.copy(results_path+'Fig3.png', archive_path+'Fig3.png')
+    plt.figure(1)
+    plt.savefig(results_path+'Fig3_alternate.png')
+    shutil.copy(results_path+'Fig3_alternate.png', archive_path+'Fig3_alternate.png')
     plt.close()
     results_path = results_path.split('/')[-2]
+    print
     print "Resulting figure and tabular output archived in the directory "+results_path
     return
 
@@ -561,42 +816,37 @@ archive_path = base_path+"results_archive/"
 # define model runs in tuple format
 #             (system,   site, spin-up.bin,                simulation.sch,            tech,       ax1/2,  ax3, color, linestyle)
 run_combos = [
-              ('forest', 'IA', 'pine_medSOCcrop_eq.sch',          'forest.sch',        '',  True, True, 'm',  '-'),  # Unmanaged forest regrowth, Iowa, young stand
-              ('forest', 'IA', 'pine_medSOCcrop_forest_eq.sch',   'forest.sch',        '',  True, True, 'm', '-.'),  # Unmanaged forest regrowth, Iowa, 70yo stand
-              ('forest', 'LA', 'pine_medSOCcrop_eq.sch',          'forest.sch',        '',  True, True, 'm', '--'),  # Unmanaged forest regrowth, Louisiana, young stand
-              ('forest', 'LA', 'pine_medSOCcrop_forest_eq.sch',   'forest.sch',        '',  True, True, 'm',  ':'),  # Unmanaged forest regrowth, Louisiana, 70yo stand
+              ('forest', 'IA', 'pine_medSOCcrop_eq.sch',          'forest.sch',        '',  True, False, True, True, 'm',  '-'),  # Unmanaged forest regrowth, Iowa, young stand
+              ('forest', 'IA', 'pine_medSOCcrop_forest_eq.sch',   'forest.sch',        '',  True, False, False, True, 'm', '-.'),  # Unmanaged forest regrowth, Iowa, 70yo stand
+              ('forest', 'LA', 'pine_medSOCcrop_eq.sch',          'forest.sch',        '',  True, False, False, True, 'm', '--'),  # Unmanaged forest regrowth, Louisiana, young stand
+              ('forest', 'LA', 'pine_medSOCcrop_forest_eq.sch',   'forest.sch',        '',  True, False, False, True, 'm',  ':'),  # Unmanaged forest regrowth, Louisiana, 70yo stand
 
-              ('grass',  'IA', 'grass_lowSOCcrop_eq.sch',          'grass.sch',        '',  True, True, 'g',  '-'),  # Unmanaged grassland regrowth, Iowa, low-SOC soil
-              ('grass',  'IA', 'grass_medSOCcrop_eq.sch',          'grass.sch',        '',  True, True, 'g', '-.'),  # Unmanaged grassland regrowth, Iowa, medium-SOC soil
-              ('grass',  'LA', 'grass_lowSOCcrop_eq.sch',          'grass.sch',        '',  True, True, 'g', '--'),  # Unmanaged grassland regrowth, Louisiana, low-SOC soil
-              ('grass',  'LA', 'grass_medSOCcrop_eq.sch',          'grass.sch',        '',  True, True, 'g',  ':'),  # Unmanaged grassland regrowth, Louisiana, medium-SOC soil
+              ('grass',  'IA', 'grass_lowSOCcrop_eq.sch',          'grass.sch',        '',  True, True, False, True, 'g',  '-'),  # Unmanaged grassland regrowth, Iowa, low-SOC soil
+              ('grass',  'IA', 'grass_medSOCcrop_eq.sch',          'grass.sch',        '',  True, False, False, True, 'g', '-.'),  # Unmanaged grassland regrowth, Iowa, medium-SOC soil
+              ('grass',  'LA', 'grass_lowSOCcrop_eq.sch',          'grass.sch',        '',  True, False, False, True, 'g', '--'),  # Unmanaged grassland regrowth, Louisiana, low-SOC soil
+              ('grass',  'LA', 'grass_medSOCcrop_eq.sch',          'grass.sch',        '',  True, False, False, True, 'g',  ':'),  # Unmanaged grassland regrowth, Louisiana, medium-SOC soil
 
-              ('forest', 'IA', 'pine_eq.sch',                'forest_harv.sch', 'current', False, True, 'r', '--'),  # Forest bioenergy, Iowa, current technology
-              ('forest', 'LA', 'pine_eq.sch',                'forest_harv.sch', 'current', False, True, 'r',  '-'),  # Forest bioenergy, Louisiana, current technology
+              ('forest', 'IA', 'pine_eq.sch',      'forest_harv_switch_IA.sch', 'current', False, False, False, True, 'r', '--'),  # Forest bioenergy, Iowa, current technology
+              ('forest', 'LA', 'pine_eq.sch',      'forest_harv_switch_LA.sch', 'current', False, False, False, True, 'r',  '-'),  # Forest bioenergy, Louisiana, current technology
 
-              ('bm',     'IA', 'grass_lowSOCcrop_eq.sch', 'switchgrass_IA.sch', 'current',  True, True, 'b',  '-'),  # Grass bioenergy, Iowa, low-SOC soil, current technology
-              ('bm',     'IA', 'grass_medSOCcrop_eq.sch', 'switchgrass_IA.sch', 'current',  True, True, 'b', '-.'),  # Grass bioenergy, Iowa, medium-SOC soil, current technology
-              ('bm',     'LA', 'grass_lowSOCcrop_eq.sch', 'switchgrass_LA.sch', 'current',  True, True, 'b', '--'),  # Grass bioenergy, Louisiana, low-SOC soil, current technology
-              ('bm',     'LA', 'grass_medSOCcrop_eq.sch', 'switchgrass_LA.sch', 'current',  True, True, 'b',  ':'),  # Grass bioenergy, Louisiana, medium-SOC soil, current technology
-
-              # ('grass',  'IA', 'grass_lowSOCcrop_eq.sch',         'switchgrass_IA.sch', 'mature',  False, True, 'c',  '-'),  # Grass bioenergy, Iowa, low-SOC soil, mature technology
-              # ('grass',  'IA', 'grass_medSOCcrop_eq.sch',         'switchgrass_IA.sch', 'mature',  False, True, 'c', '-.'),  # Grass bioenergy, Iowa, medium-SOC soil, mature technology
-              # ('grass',  'LA', 'grass_lowSOCcrop_eq.sch',         'switchgrass_LA.sch', 'mature',  False, True, 'c', '--'),  # Grass bioenergy, Louisiana, low-SOC soil, mature technology
-              # ('grass',  'LA', 'grass_medSOCcrop_eq.sch',         'switchgrass_LA.sch', 'mature',  False, True, 'c',  ':')   # Grass bioenergy, Louisiana, medium-SOC soil, mature technology
+              ('bm',     'IA', 'grass_lowSOCcrop_eq.sch', 'switchgrass_IA.sch', 'current',  True, False, False, True, 'b',  '-'),  # Grass bioenergy, Iowa, low-SOC soil, current technology
+              ('bm',     'IA', 'grass_medSOCcrop_eq.sch', 'switchgrass_IA.sch', 'current',  True, False, False, True, 'b', '-.'),  # Grass bioenergy, Iowa, medium-SOC soil, current technology
+              ('bm',     'LA', 'grass_lowSOCcrop_eq.sch', 'switchgrass_LA.sch', 'current',  True, False, False, True, 'b', '--'),  # Grass bioenergy, Louisiana, low-SOC soil, current technology
+              ('bm',     'LA', 'grass_medSOCcrop_eq.sch', 'switchgrass_LA.sch', 'current',  True, False, False, True, 'b',  ':'),  # Grass bioenergy, Louisiana, medium-SOC soil, current technology
               ]
 
-labels = [('Line colors:', 'None', 'None'),
-          (' Unmanaged forest regrowth', 'm', '-'),
-          (' Unmanaged grassland regrowth', 'g', '-'),
-          (' Forest bioenergy', 'r', '-'),
-          (' Grass bioenergy, current technology', 'b', '-'),
-          #('Grass bioenergy, future technology', 'c', '-'),
-
-          ('Line styles:', 'None', 'None'),
-          (' Iowa, young stand or low-SOC soil', 'k', '-'),
-          (' Iowa, 70yo stand or medium-SOC soil', 'k', '-.'),
-          (' Louisiana, young stand or low-SOC soil', 'k', '--'),
-          (' Louisiana, 70yo stand or medium-SOC soil', 'k', ':')]
+labels = [
+          # ('Line colors:', 'None', 'None'),
+          (' Unmanaged forest regrowth on arable land', 'm', '-'),
+          (' Unmanaged grassland regrowth on arable land', 'g', '-'),
+          (' Forest harvest & switchgrass bioenergy', 'r', '-'),
+          (' Switchgrass bioenergy from arable land', 'b', '-'),
+          # ('Line styles:', 'None', 'None'),
+          # (' Iowa, young stand or low-SOC soil', 'k', '-'),
+          # (' Iowa, 70yo stand or medium-SOC soil', 'k', '-.'),
+          # (' Louisiana, young stand or low-SOC soil', 'k', '--'),
+          # (' Louisiana, 70yo stand or medium-SOC soil', 'k', ':')
+          ]
 
 # initiate interactive routine
 prompt = """

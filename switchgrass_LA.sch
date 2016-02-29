@@ -19,7 +19,7 @@ Year Month Option
 2086          Last year
 10            Repeats # years
 2016          Output starting year
-7            Output month
+11            Output month
 1.000         Output interval
 F             Weather choice
 weather.wth

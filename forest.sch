@@ -17,15 +17,16 @@ DUKE          Initial tree
 Year Month Option
 1             Block #   loblolly pine 
 2085          Last year
-59            Repeats # years
+1             Repeats # years
 2015          Output starting year
 11            Output month
 1.000           Output interval
 F             Weather choice
 weather.wth
 
-   1   16  TREE DUKE    
-   1   16  TFST
-   59  365 TLST
+   1   16 TREE DUKE    
+   1   16 TFST
+   1   90 FERT N1
+   1  365 TLST
    
 -999 -999 X
