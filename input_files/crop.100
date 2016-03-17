@@ -10877,7 +10877,7 @@ TMC4  Temperate_Tallgrass_[Konza_tallgrass]
 2.0               'CAFUE'
 1.4               'EMAX'
 SG3U   switchgrass_based_on_G2_grass_warm_season_species
-3.5	'PRDX(1)'
+2.98	'PRDX(1)'
 30	'PPDF(1)'
 44	'PPDF(2)'
 0.75	'PPDF(3)'
@@ -10990,7 +10990,7 @@ SG3U   switchgrass_based_on_G2_grass_warm_season_species
 2	'CAFUE'
 1.2	'EMAX'
 SG3L   switchgrass_based_on_G2_grass_warm_season_species
-4	'PRDX(1)'
+3.4	'PRDX(1)'
 30	'PPDF(1)'
 44	'PPDF(2)'
 0.75	'PPDF(3)'

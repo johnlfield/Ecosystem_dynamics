@@ -163,7 +163,7 @@ SGTH     switchgrass field trial harvest (all AG biomass removed but 2% stubble)
 0.0               'AGLREM'    
 0.9               'BGLREM'    
 0.0               'FLGHRV'    
-0.98              'RMVSTR'    
+0.95              'RMVSTR'    
 0.0               'REMWSD'    
 0.0               'HIBG'
 

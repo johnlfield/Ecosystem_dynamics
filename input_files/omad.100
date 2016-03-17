@@ -990,3 +990,11 @@ R386   Organic_matter_addition_for_Rodale
 16.3              'ASTREC(1)'
 300.00            'ASTREC(2)'
 300.00            'ASTREC(3)'
+M3    Manure_3_grams_N_m^2    
+1.5               'OMADTYP'           
+45.00             'ASTGC'  
+0.00              'ASTLBL' 
+0.18              'ASTLIG' 
+15.00             'ASTREC(1)'
+300.00000         'ASTREC(2)'
+300.00000         'ASTREC(3)'

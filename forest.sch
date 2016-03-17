@@ -24,8 +24,8 @@ Year Month Option
 F             Weather choice
 weather.wth
 
-   1   16 TREE DUKE    
-   1   16 TFST
+   1    1 TREE DUKE   
+   1    2 TFST
    1   90 FERT N1
    1  365 TLST
    

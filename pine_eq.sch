@@ -1,5 +1,5 @@
 1             Starting year
-5100          Last year
+5060          Last year
 site.100      Site file name
 0             Labeling type
 -1            Labeling year
@@ -32,7 +32,7 @@ weather.wth
 -999 -999 X
 
 2             Block #
-5100          Last year
+5070          Last year
 1             Repeats # years
 5001          Output starting year
 12            Output month
