@@ -4,6 +4,7 @@
 """
 
 
+import csv
 from db_tools import csv_to_sql
 import matplotlib
 import matplotlib.pyplot as plt
@@ -253,6 +254,23 @@ def interactive_soils(soil_atts_fpath):
     selected_sizes = []
     fig.canvas.mpl_connect('pick_event', on_pick)
     plt.show()
+
+    # write soils to file and save map view
+    description = raw_input("Please enter a file name (no spaces or extension) to save soil list and map, or press enter to exit: ")
+    if description:
+        fig_fpath = solution_path + '/' + description + '.png'
+        list_fpath = solution_path + '/' + description + '.csv'
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plot_triangle()
+        plot_data(xs, ys, colors, 'k', point_sizes=area_weighted_sizes)
+        plot_data(selected_xs, selected_ys, 'none', 'r', edgewidth=2, point_sizes=selected_sizes)
+        plot_legend()
+        plt.savefig(fig_fpath)
+        c = csv.writer(open(list_fpath, "wb"))
+        for mukey in selected_mukeys:
+            c.writerow([mukey])
+    print
 
 
 interactive_soils('/Users/johnfield/Desktop/local_python_code/Interactive_plots/36117_atts_soils.csv')
