@@ -18,7 +18,7 @@ def interactive_soils(soil_atts_fpath):
     """
     """
 
-    def triangule(sand, clay):
+    def triangle(sand, clay):
         x = (-clay/2.0) - sand  # see 'AFRI grass datasets v011.xlsx'
         y = clay
         return x, y
@@ -55,7 +55,7 @@ def interactive_soils(soil_atts_fpath):
             vertices_x = []
             vertices_y = []
             for vertex in vertex_list:
-                x, y = triangule(vertex[0], vertex[2])
+                x, y = triangle(vertex[0], vertex[2])
                 vertices_x.append(x)
                 vertices_y.append(y)
             plt.plot(vertices_x, vertices_y, color='grey', marker=None, linewidth=0.5, zorder=0)
@@ -78,7 +78,7 @@ def interactive_soils(soil_atts_fpath):
         label_size = 10
         for key in soil_class_lables:
             center = soil_class_lables[key]
-            x, y = triangule(center[0], center[2])
+            x, y = triangle(center[0], center[2])
             plt.text(x, y, key, color='grey', ha='center', va='center', fontsize=label_size, zorder=0)
 
     def plot_data(x_set, y_set, facecolors, edgecolor, edgewidth=0.5, point_sizes=16, clickable=False):
@@ -120,17 +120,40 @@ def interactive_soils(soil_atts_fpath):
             del selected_xs[mukey_index]
             del selected_ys[mukey_index]
             del selected_sizes[mukey_index]
+            del selected_metadata[mukey_index]
         else:
             selected_mukeys.append(mukey)
             mukey_index = mukeys.index(mukey)
             selected_xs.append(xs[mukey_index])
             selected_ys.append(ys[mukey_index])
             selected_sizes.append(area_weighted_sizes[mukey_index])
-        print 'Current soil mukey list:', selected_mukeys
+            selected_metadata.append([mukeys[mukey_index], areas[mukey_index], soil_classes[mukey_index],
+                                      sands[mukey_index], silts[mukey_index], clays[mukey_index], depths[mukey_index],
+                                      whcs[mukey_index]])
+        if color_scheme == 'd':
+            selected_metadata.sort(key=itemgetter(6))
+        elif color_scheme == 'w':
+            selected_metadata.sort(key=itemgetter(7))
+        else:
+            selected_metadata.sort(key=itemgetter(3))
+        print 'Current soil list:'
+        print "".join('%015s' % i for i in header)
+        for metadata in selected_metadata:
+            display = []
+            for element in metadata:
+                if type(element) == float:
+                    display.append(round(element, 3))
+                else:
+                    display.append(element)
+            print "".join('%015s' % i for i in display)
         plt.cla()
         plot_triangle()
-        plot_data(xs, ys, colors, 'k', point_sizes=area_weighted_sizes, clickable=True)
-        plot_data(selected_xs, selected_ys, 'none', 'r', edgewidth=2, point_sizes=selected_sizes)
+        if sizing == 'a':
+            plot_data(xs, ys, colors, 'k', point_sizes=area_weighted_sizes, clickable=True)
+            plot_data(selected_xs, selected_ys, 'none', 'r', edgewidth=2, point_sizes=selected_sizes)
+        else:
+            plot_data(xs, ys, colors, 'k', clickable=True)
+            plot_data(selected_xs, selected_ys, 'none', 'r', edgewidth=2)
         plot_legend()
         plt.show()
         print
@@ -157,6 +180,7 @@ def interactive_soils(soil_atts_fpath):
     print 'Processing soil attributes for plotting as triangle point cloud...'
     print
 
+    header = ['mukey', 'area (ha)', 'soil class', 'sand', 'silt', 'clay', 'depth (cm)', 'total WHC (cm)']
     filtering = True
     while filtering:
         relative_area_threshold = raw_input("Enter a minimum soil area threshold (in ha) for inclusion in analysis; set to zero to continue without filtering: ")
@@ -186,7 +210,7 @@ def interactive_soils(soil_atts_fpath):
         for i in range(len(mukeys)):
             sand = sands[i]
             clay = clays[i]
-            x, y = triangule(sand, clay)
+            x, y = triangle(sand, clay)
             xs.append(x)
             ys.append(y)
 
@@ -229,7 +253,8 @@ def interactive_soils(soil_atts_fpath):
     legend_increments = []
     legend_colors = []
     legend_title = ''
-    color_scheme = raw_input("For point coloring by depth type 'd'; by WCH type 'w', otherwise press enter to continue with unifor point color: ")
+    sizing = raw_input("For point sizing by area type 'a'; otherwise press enter to continue with uniform point sizing: ")
+    color_scheme = raw_input("For point coloring by depth type 'd'; by WCH type 'w', otherwise press enter to continue with uniform point color: ")
     print
     if color_scheme == 'd':
         colors = depth_colors
@@ -246,12 +271,16 @@ def interactive_soils(soil_atts_fpath):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     plot_triangle()
-    plot_data(xs, ys, colors, 'k', point_sizes=area_weighted_sizes, clickable=True)
+    if sizing == 'a':
+        plot_data(xs, ys, colors, 'k', point_sizes=area_weighted_sizes, clickable=True)
+    else:
+        plot_data(xs, ys, colors, 'k', clickable=True)
     plot_legend()
     selected_mukeys = []
     selected_xs = []
     selected_ys = []
     selected_sizes = []
+    selected_metadata = []
     fig.canvas.mpl_connect('pick_event', on_pick)
     plt.show()
 
@@ -263,14 +292,19 @@ def interactive_soils(soil_atts_fpath):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         plot_triangle()
-        plot_data(xs, ys, colors, 'k', point_sizes=area_weighted_sizes)
-        plot_data(selected_xs, selected_ys, 'none', 'r', edgewidth=2, point_sizes=selected_sizes)
+        if sizing == 'a':
+            plot_data(xs, ys, colors, 'k', point_sizes=area_weighted_sizes)
+            plot_data(selected_xs, selected_ys, 'none', 'r', edgewidth=2, point_sizes=selected_sizes)
+        else:
+            plot_data(xs, ys, colors, 'k')
+            plot_data(selected_xs, selected_ys, 'none', 'r', edgewidth=2)
         plot_legend()
         plt.savefig(fig_fpath)
         c = csv.writer(open(list_fpath, "wb"))
-        for mukey in selected_mukeys:
-            c.writerow([mukey])
+        c.writerow(header)
+        for row in selected_metadata:
+            c.writerow(row)
     print
 
 
-interactive_soils('/Users/johnfield/Desktop/local_python_code/Interactive_plots/36117_atts_soils.csv')
+interactive_soils('/Users/johnfield/Desktop/local_python_code/Interactive_plots/OneidaCoNY_atts_soils.csv')
