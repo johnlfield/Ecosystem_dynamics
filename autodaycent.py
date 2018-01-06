@@ -357,12 +357,12 @@ def analysis(recent_path, archive_path, run_combos, labels):
                   "CCS marginal sequestration (MgCO2eq/ha/y)",
                   "Simulation"]
     bar_out_file_object = open(bar_out_fpath, "wb")
-    d = csv.writer(bar_out_file_object)
-    d.writerow(bar_header)
+    bar_data_writer = csv.writer(bar_out_file_object)
+    bar_data_writer.writerow(bar_header)
 
     raw_out_fpath = results_path+"Raw_mitigation.csv"
     raw_out_file_object = open(raw_out_fpath, "wb")
-    e = csv.writer(raw_out_file_object)
+    raw_mitigation_data_writer = csv.writer(raw_out_file_object)
 
     # initialize figure
     fig = plt.figure(figsize=(8, 4))
@@ -371,7 +371,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
     ax3 = fig.add_subplot(1, 3, 3, sharex=ax1, sharey=ax1)
 
     # define structure for saving stacked bar chart data [[avg_BGs], [avg_AGs], [avg_harvs], [avg_resp],
-    #                                                     [ecosystem GHGE mitigation], [bioenergy GHGEM], [ticks]]
+                                                        # [ecosystem GHGE mitigation], [bioenergy GHGEM], [ticks]]
     bar_data = [[], [], [], [], [], [], [], [], [], [], []]
 
     # define structure for storing running curve minima and maxima for filling
@@ -399,77 +399,51 @@ def analysis(recent_path, archive_path, run_combos, labels):
         nflux_fpath = recent_path+handle+'_nflux.out'
         dc_sip_fpath = recent_path+handle+'_dc_sip.csv'
 
-
-        ### process ANNUAL .lis output #################################################################################
-        results = read_full_out(lis_fpath, 4, 1)
+        ### read ANNUAL herbacious & woody biomass harvest yields from .lis output #####################################
+        annual_lis_results = read_full_out(lis_fpath, 4, 1)
         years = []
-        for year in range(len(results[0])):
+        for year in range(len(annual_lis_results[0])):
             years.append(year+1)
-        # time = np.array(results[0])
-        somsc = np.array(results[1])
-        crmvst = np.array(results[2])
-        # aglivc = np.array(results[3])
-        # stdedc = np.array(results[4])
-        # fbrchc = np.array(results[5])
-        # rlwodc = np.array(results[6])
-        # wood1c = np.array(results[7])
-        # wood2c = np.array(results[8])
-        totsysc = np.array(results[9])
-        # agcacc = np.array(results[10])
-        # fbracc = np.array(results[11])
-        # rlwacc = np.array(results[12])
-        tcrem = np.array(results[13])
 
-        # compute SOC and total ecosystem C from ANNUAL output
-        tot_SOC_MgC_ha = somsc * 0.01
-        tot_sysC_MgC_ha = totsysc * 0.01
+        crmvst = np.array(annual_lis_results[2])   # amount of C removed through grass/crop straw harvest (g/m2/month)
 
-        # compute harvest from ANNUAL output
+        tcrem = np.array(annual_lis_results[13])   # total C removed during forest removal events (g/m2)
+
         wood_harvest = np.array(tcrem[0])
         wood_harvest = np.append(wood_harvest, np.diff(tcrem))
         harvest_gc_m2 = (crmvst + wood_harvest)
-        nonzero_harvest_gc_m2 = []
-        for harvest in harvest_gc_m2:
-            if harvest > 0:
-                nonzero_harvest_gc_m2.append(harvest)
-        avg_harvest_gC_m2 = np.sum(nonzero_harvest_gc_m2) / float(len(nonzero_harvest_gc_m2))
-
 
         ### process DAILY dc_sip.csv output ############################################################################
-        more_results = read_full_out(dc_sip_fpath, 1, 0, delim='c')
+        daily_dcsip_results = read_full_out(dc_sip_fpath, 1, 0, delim='c')
         days = []
-        zeros = []
-        for day in range(len(more_results[0])):
+        for day in range(len(daily_dcsip_results[0])):
             days.append((day+1)/365.0)
-            zeros.append(0)
-        mcprd1 = np.array(more_results[22])   # Daily NPP for shoots for grass/crop system (gC/m2)
-        mfprd1 = np.array(more_results[25])   # Daily NPP for live leaves for tree system (gC/m2)
-        mfprd3 = np.array(more_results[28])   # Daily NPP for live fine branches for tree system (gC/m2)
-        mfprd4 = np.array(more_results[29])   # Daily NPP for live large wood for tree system (gC/m2)
-        NPP = np.array(more_results[31])
-        aglivc = np.array(more_results[33])
-        bglivcj = np.array(more_results[34])
-        bglivcm = np.array(more_results[35])
-        rleavc = np.array(more_results[36])
-        frootcj = np.array(more_results[37])
-        frootcm = np.array(more_results[38])
-        fbrchc = np.array(more_results[39])
-        rlwodc = np.array(more_results[40])
-        crootc = np.array(more_results[41])
-        tlai = np.array(more_results[42])
-        stdedc = np.array(more_results[43])
-        wood1c = np.array(more_results[44])   # dead fine branches
-        wood2c = np.array(more_results[45])   # dead large wood
-        wood3c = np.array(more_results[46])   # dead coarse roots
-        strucc1 = np.array(more_results[47])  # 1=surface, 2=soil
-        metabc1 = np.array(more_results[48])
-        strucc2 = np.array(more_results[49])
-        metabc2 = np.array(more_results[50])
-        som1c1 = np.array(more_results[51])
-        som1c2 = np.array(more_results[52])
-        som2c1 = np.array(more_results[53])
-        som2c2 = np.array(more_results[54])
-        som3c = np.array(more_results[55])
+
+        NPP = np.array(daily_dcsip_results[31])      # Summation of all production values (gC/m2)
+
+        aglivc = np.array(daily_dcsip_results[33])   # Above ground live carbon for crop/grass (g/m2)
+        bglivcj = np.array(daily_dcsip_results[34])  # Juvenile fine root live carbon for crop/grass (g/m2)
+        bglivcm = np.array(daily_dcsip_results[35])  # Mature fine root live carbon for crop/grass (g/m2)
+        rleavc = np.array(daily_dcsip_results[36])   # Leaf live carbon for forest (g/m2)
+        frootcj = np.array(daily_dcsip_results[37])  # Juvenile fine root live carbon for forest (g/m2)
+        frootcm = np.array(daily_dcsip_results[38])  # Mature fine root live carbon for forest (g/m2)
+        fbrchc = np.array(daily_dcsip_results[39])   # Fine branch live carbon for forest (g/m2)
+        rlwodc = np.array(daily_dcsip_results[40])   # Large wood live carbon for forest (g/m2)
+        crootc = np.array(daily_dcsip_results[41])   # Coarse root live carbon for forest (g/m2)
+
+        stdedc = np.array(daily_dcsip_results[43])   # Standing dead carbon (g/m2)
+        wood1c = np.array(daily_dcsip_results[44])   # Dead fine branch carbon (g/m2)
+        wood2c = np.array(daily_dcsip_results[45])   # Dead large wood carbon (g/m2)
+        wood3c = np.array(daily_dcsip_results[46])   # Dead coarse root carbon (g/m2)
+        strucc1 = np.array(daily_dcsip_results[47])  # Carbon in structural component of surface litter (g/m2)
+        metabc1 = np.array(daily_dcsip_results[48])  # Carbon in metabolic component of surface litter (g/m2)
+        strucc2 = np.array(daily_dcsip_results[49])  # Carbon in structural component of soil litter (g/m2)
+        metabc2 = np.array(daily_dcsip_results[50])  # Carbon in metabolic component of soil litter (g/m2)
+        som1c1 = np.array(daily_dcsip_results[51])   # Carbon in surface active soil organic matter (g/m2)
+        som1c2 = np.array(daily_dcsip_results[52])   # Carbon in soil active soil organic matter (g/m2)
+        som2c1 = np.array(daily_dcsip_results[53])   # Carbon in surface slow soil organic matter (g/m2)
+        som2c2 = np.array(daily_dcsip_results[54])   # Carbon in soil slow soil organic matter (g/m2)
+        som3c = np.array(daily_dcsip_results[55])    # Carbon in passive soil organic matter (g/m2)
 
         # compute aboveground and belowground totals from DAILY output
         AG = aglivc
@@ -496,15 +470,8 @@ def analysis(recent_path, archive_path, run_combos, labels):
         BG += som2c2
         BG += som3c
 
-        # compute ANPP from DAILY output
-        ANPP = mcprd1
-        ANPP += mfprd1
-        ANPP += mfprd3
-        ANPP += mfprd4
-
         # compute cumulative sum arrays, net change arrays, and perform unit conversions from DAILY output
         cum_NPP = np.cumsum(NPP) * 0.01
-        cum_ANPP = np.cumsum(ANPP) * 0.01
         initial_AG = AG[0]
         net_AG = np.array([x-initial_AG for x in AG]) * 0.01
         initial_BG = BG[0]
@@ -515,18 +482,17 @@ def analysis(recent_path, archive_path, run_combos, labels):
         net_eco_MgC_ha.tolist()
         eco_C_MgCO2_ha = [x*3.67 for x in net_eco_MgC_ha]
 
-        # compute average annnual mitigation over the first 30 y of simulation only (skipping last 41)
+        # compute average annual mitigation over the first 30 y of simulation only (skipping last 41)
         avg_ecosystem_C_mitigation = eco_C_MgCO2_ha[-14975] / float(days[-14975])
         bar_data[5].append(avg_ecosystem_C_mitigation)
-
         ghge_MgCO2_ha = np.array(eco_C_MgCO2_ha)
 
-
-        ### process DAILY nflux.out output #############################################################################
-
+        ### process DAILY nflux.out output ############################################################################
         n2o_results = read_full_out(nflux_fpath, 1, 0)
+
         nitri = np.array(n2o_results[2])     # Daily total nitrification N2O emissions, g N (ha)-1 (not m-2!)
         denitri = np.array(n2o_results[3])   # Daily total denitrification N2O emissions, g N (ha)-1 (not m-2!)
+
         N2Oflux = nitri
         N2Oflux += denitri
         N2O_MgCO2_ha = N2Oflux * 0.000001 * n_to_n2o * n2o_gwp100 * -1.0
@@ -536,9 +502,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
 
         ghge_MgCO2_ha += cum_N2O_MgCO2_ha
 
-
         ### compute and plot mitigation from ecosystem C changes and bioenergy production ##############################
-
         # update harvest array from annual to daily basis
         daily_harvest_g_m2 = []
         daily_counter = 0
@@ -649,18 +613,16 @@ def analysis(recent_path, archive_path, run_combos, labels):
 
         counter += 1
 
-
     ### finalize data logging & figure formatting ######################################################################
-
     # write bar chart output to file for use in Excel
     bar_data = zip(*bar_data)
     for line in bar_data:
-        d.writerow(line)
+        bar_data_writer.writerow(line)
 
     # write bar chart output to file for use in Excel
     raw_data = zip(*raw_data)
     for line in raw_data:
-        e.writerow(line)
+        raw_mitigation_data_writer.writerow(line)
 
     # add fill to subplots
     for color in fill:
@@ -705,7 +667,6 @@ def analysis(recent_path, archive_path, run_combos, labels):
     ax2.spines['right'].set_color('none')
     ax2.spines['top'].set_color('none')
     ax2.get_xaxis().tick_bottom()
-    # ax2.get_yaxis().tick_left()
     ax2.grid(True)
     plt.setp(ax2.get_yticklabels(), visible=False)
 
@@ -713,7 +674,6 @@ def analysis(recent_path, archive_path, run_combos, labels):
     ax3.spines['right'].set_color('none')
     ax3.spines['top'].set_color('none')
     ax3.get_xaxis().tick_bottom()
-    # ax3.get_yaxis().tick_left()
     ax3.grid(True)
     plt.setp(ax3.get_yticklabels(), visible=False)
 
@@ -722,7 +682,6 @@ def analysis(recent_path, archive_path, run_combos, labels):
     for entry in labels:
         label, color, linestyle, linewidth = entry
         ax2.plot(dummy_point[0], dummy_point[1], label=label, color=color, linestyle=linestyle, linewidth=8)
-    # ax2.legend(bbox_to_anchor=(0.5, -0.9), loc=8, prop={'size': 9}, title="Subsequent Land Use:")
     ax2.set_zorder(1)
     ax2.legend(loc=9, prop={'size': 8}, title="Subsequent Land Use:")
     ax2.get_legend().get_title().set_fontsize('9')
@@ -748,6 +707,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
 
 
 def calibration(base_path, cal_sets, calibration_path, work_path, library_path, ddc_fpath, ddclist_fpath):
+
     # determine all calibration runs and prompt user to proceed
     print "Calibration will be performed for the following regions: "
     cal_paths = filter(os.path.isdir, [os.path.join(calibration_path, f) for f in os.listdir(calibration_path)])
