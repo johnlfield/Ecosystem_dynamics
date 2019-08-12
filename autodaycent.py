@@ -1,30 +1,58 @@
 #!/bin/python
 
 """****************************************************************************
-This interactive python routine facilitates execution of DayCent simulations
-and results analysis for bioenergy ecosystem dynamics assessments. It is
-currently organized around the generation of Figures 3a-c for the manuscript
-"Greenhouse Gas Emission Reduction from Biofuels and Ecosystem Carbon Storage",
-and structured such that:
-   * model execution and results analysis are de-coupled for convenience
-   * ensemble runs across multiple sites are accommodated
-   * analysis results are automatically archived with full provenance
+This interactive python routine facilitates calibration of DayCent and batch
+execution of the swtichgrass-biofuel and vegetation restoration scenarios in
+"The logic of greenhouse gas mitigation through cellulosic biofuel production
+is sound" by John Field, Tom Richard, Erica Smithwick, Hao Cai, Mark Laser,
+David LeBauer, Stephen Long, Keith Paustian, Zhangcai Qin, John Sheehan, Pete
+Smith, Michael Wang, and Lee Lynd.
+
+Simulations are run on select soils present within a set of case study sites,
+as represented in the 'sites' directory. Individual assessment scenarios are
+specified near the bottom of this script, including the site/soil to be
+simulated, the DayCent schedule files to use for model spin-up and scenario
+simulation, and the biorefining technology (if any) for which to estimate gross
+avoided fossil fuel emissions (AFFE).
+
+Results analysis includes:
+   * extraction of biomass yield results, and calculation of associated supply
+        chain emissions and gross AFFE
+   * processing of daily model output to calculated net ecosystem carbon balance
+        and CO2-equivalent fluxes of N2O
+   * calculation and tabular export of annualy-average results
+   * visualization of select results
+Manuscript Fig. 3 is generated directly by this script, whereas annually-
+averaged results for the different scenarios are exported in tabular format
+for final analysis and figure generation in
+FieldEtAlGHGMitigationLogic-calculations.xlsx
+
+Additional workflow features include:
+   * de-coupling of model calibration, spin-up, scenario execution, and results
+       analysis to facilitate more efficient development
+   * temporary storage of full set DayCent output from most recent simulation
+       set
+   * automatic archiving of summary results
+
 To add additional sites or scenarios to the model run ensemble, create a new
-site directory with weather.wth and site.100 files and add the associated
+site directory with weather.wth and site.100 files, and add the associated
 scenario details to the run_combos data structure.
 ****************************************************************************
 """
 
 import os
+from collections import OrderedDict
 import csv
 import glob
 import shutil
 import subprocess
-import time
+import time as ti
 import datetime
 import matplotlib
 matplotlib.use('Agg')
 matplotlib.rcParams['pdf.fonttype'] = 42
+import matplotlib.style
+matplotlib.style.use('classic')
 import matplotlib.pyplot as plt
 import numpy as np
 import sqlite3
@@ -33,6 +61,7 @@ import sqlite3
 # define constants
 n_to_n2o = 44.013/28.014
 n2o_gwp100 = 298.0
+time_horizon = 30   # years
 
 
 def DDcentEVI(ddc_fpath, sch_file, target_path, run_id, out_files, ddclist_fpath="", site_file_out=False):
@@ -135,35 +164,48 @@ def bioenergy_ghg_avoid_gCO2eq_m2(biomass_gC_m2_array, conversion_tech):
         return
 
     # GHG intensity factors, all in units of g CO2eq (kg dry delivered biomass)-1
-    ghg_int_biofuel_supplychain_g_kg = 173.20
-
     gross_GHG_int_avoided_g_kg = -9999999
+    ghg_int_conversion_g_kg = -9999999
     CCS_marg_GHG_int_g_kg = -9999999
 
     if conversion_tech == 'current':
-        gross_GHG_int_avoided_g_kg = 705.02
+        gross_GHG_int_avoided_g_kg = 652.
+        ghg_int_conversion_g_kg = 100.8
         CCS_marg_GHG_int_g_kg = 0
 
     elif conversion_tech == 'mature':
-        gross_GHG_int_avoided_g_kg = 1110.0
+        gross_GHG_int_avoided_g_kg = 1101.
+        ghg_int_conversion_g_kg = 37.9
         CCS_marg_GHG_int_g_kg = 0
 
     elif conversion_tech == 'CCS':
-        gross_GHG_int_avoided_g_kg = 1110.0
-        CCS_marg_GHG_int_g_kg = 766.74
+        gross_GHG_int_avoided_g_kg = 1029.
+        ghg_int_conversion_g_kg = 37.9
+        CCS_marg_GHG_int_g_kg = 846.
 
-    # calculate individual GHG intensity terms from biomass supply array
-    biomass_c_conc = 0.45
+    # calculate biomass supply array
+    biomass_c_conc = 0.5
     biomass_array_kg_m2 = (biomass_gC_m2_array / biomass_c_conc) * 0.001   # kg biomass m-2 y-1
 
+    # calculate individual GHG intensity terms
     gross_bioenergy_ghg_mitigation_array_g_m2 = gross_GHG_int_avoided_g_kg * biomass_array_kg_m2   # g CO2eq m-2 y-1
-    supply_chain_ghg_array_g_m2 = ghg_int_biofuel_supplychain_g_kg * biomass_array_kg_m2           # g CO2eq m-2 y-1
-    CCS_marg_ghg_array_g_m2 = CCS_marg_GHG_int_g_kg * biomass_array_kg_m2                          # g CO2eq m-2 y-1
+    CCS_marg_ghg_array_g_m2 = CCS_marg_GHG_int_g_kg * biomass_array_kg_m2  # g CO2eq m-2 y-1
+
+    lifecycle_ghg_g_m2 = []
+    for biomass_kg_m2 in biomass_array_kg_m2:
+        if biomass_kg_m2:
+            ghg_feedstock_farming_gCO2e_m2 = 82.101 * (biomass_kg_m2 ** -0.63)
+            ghg_conversion_gCO2e_m2 = ghg_int_conversion_g_kg * biomass_kg_m2  # g CO2eq m-2 y-1
+        else:
+            ghg_feedstock_farming_gCO2e_m2 = 0.
+            ghg_conversion_gCO2e_m2 = 0.
+        lifecycle_ghg_g_m2.append(ghg_conversion_gCO2e_m2 + ghg_feedstock_farming_gCO2e_m2)   # g CO2eq m-2 y-1
+    lifecycle_ghg_array_g_m2 = np.array(lifecycle_ghg_g_m2)
 
     net_bioenergy_ghg_mitigation_array_g_m2 = gross_bioenergy_ghg_mitigation_array_g_m2 + CCS_marg_ghg_array_g_m2 - \
-                                              supply_chain_ghg_array_g_m2
+                                              lifecycle_ghg_array_g_m2
 
-    return net_bioenergy_ghg_mitigation_array_g_m2, supply_chain_ghg_array_g_m2, CCS_marg_ghg_array_g_m2
+    return net_bioenergy_ghg_mitigation_array_g_m2, lifecycle_ghg_array_g_m2, CCS_marg_ghg_array_g_m2
 
 
 def copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, library_path, bin_fpath=""):
@@ -202,6 +244,60 @@ def clean_out(work_path, move_path, save_types):
     return
 
 
+def pool_detail(time_array, titles_timeseries_colors_labels_tuple_list, fig_fpath):
+
+    plt.figure(1)
+    f, axes = plt.subplots(len(titles_timeseries_colors_labels_tuple_list), sharex=True, figsize=(8, 9))
+
+    for e, timeseries_colors_labels in enumerate(titles_timeseries_colors_labels_tuple_list):
+        title, master_color, timeseries, colors, labels = timeseries_colors_labels
+
+        # create & initialize stacked line plot upper & lower boundary data structures
+        lower_series = []
+        upper_series = []
+        for i in range(len(timeseries[0])):
+            lower_series.append(0.0)
+            upper_series.append(0.0)
+        lower_boundary = np.array(lower_series)
+        upper_boundary = np.array(upper_series)
+
+        for f, series in enumerate(timeseries):
+            upper_boundary += series
+            axes[e].plot(0, 0, color=colors[f], linewidth=10, label=labels[f])   # dummy for legend
+            axes[e].fill_between(time_array, lower_boundary, upper_boundary, facecolor=colors[f], linewidth=0.0)
+            lower_boundary += series
+        axes[e].plot(time_array, upper_boundary, color=master_color, linewidth=2.0)
+
+        axes[e].set_title(title)
+        axes[e].legend(loc=4, prop={'size': 10})
+        axes[e].axhline(0, color='k')
+        if e == 0:
+            initial_pool_size = upper_boundary[0]
+            print "   Initial total C pool: %.1f g C m-2" % initial_pool_size
+            time_horizon_pool_size = upper_boundary[time_horizon*365]
+            print "   %s-year total C pool: %.1f g C m-2" % (str(time_horizon), time_horizon_pool_size)
+            pool_change_gC_m2 = time_horizon_pool_size - initial_pool_size
+            pool_change_text = "%s-y change in total C pool: %.1f g C m-2" % (str(time_horizon), pool_change_gC_m2)
+            rate_check_text = "Average change rate: %.3f Mg C ha-1 y-1" % ((pool_change_gC_m2*0.01) / time_horizon)
+            print "   " + pool_change_text
+            print "   " + rate_check_text
+            t = axes[e].text(0.02, 0.8, pool_change_text+'\n'+rate_check_text, transform=axes[e].transAxes,
+                             color=master_color, backgroundcolor='w')
+            t.set_bbox(dict(facecolor='w', alpha=0.75, linewidth=0.0))
+            print
+
+            axes[e].axhline(initial_pool_size, color=master_color)
+            axes[e].axhline(time_horizon_pool_size, color=master_color)
+            axes[e].axvline(time_horizon)
+            plt.ylabel('Carbon pool size (g C m-2)')
+
+    title = fig_fpath.split('/')[-1][:-4]
+    plt.suptitle(title)
+    plt.xlabel('Simulation year')
+    plt.savefig(fig_fpath)
+    plt.close()
+
+
 def execute(base_path, sites_path, work_path, library_path, recent_path, ddc_fpath, ddclist_fpath, run_combos):
 
     # determine all model runs and prompt user to proceed
@@ -218,14 +314,14 @@ def execute(base_path, sites_path, work_path, library_path, recent_path, ddc_fpa
         os.remove(each_file)
 
     # execute simulations
-    start = time.time()
+    start = ti.time()
     for run_combo in run_combos:
 
         # read run specifications
-        site = run_combo[1]
-        bin_file = run_combo[2].split('.')[0]+'.bin'
-        sch_file = run_combo[3]
-        detail = run_combo[12]
+        site = run_combo[0]
+        bin_file = run_combo[1].split('.')[0]+'.bin'
+        sch_file = run_combo[2]
+        detail = run_combo[5]
         bin_handle = site+'_'+bin_file.split('.')[0]
         handle = bin_handle+'_'+sch_file.split('.')[0]
         print "Simulating %s / %s / %s..." % (site, bin_file, sch_file)
@@ -263,7 +359,7 @@ def execute(base_path, sites_path, work_path, library_path, recent_path, ddc_fpa
     # report out
     print "****************************************************************************"
     print
-    time_sec = round((time.time() - start), 2)
+    time_sec = round((ti.time() - start), 2)
     time_min = round(time_sec/60.0, 2)
     print "It took %.2f minutes total to execute the specified DayCent simulation ensemble." % time_min
     print
@@ -275,7 +371,7 @@ def spinup(base_path, sites_path, work_path, library_path, ddc_fpath, ddclist_fp
     # determine spin-ups to run, and associated input files
     spinup_combos = []
     for run_combo in run_combos:
-        spinup_combos.append((run_combo[1], run_combo[2]))
+        spinup_combos.append((run_combo[0], run_combo[1]))
     unique_spinup_combos = list(set(spinup_combos))
     unique_spinup_combos.sort()
     print "Please specify a spin-up scenario to run, or 'a' for all:"
@@ -302,7 +398,7 @@ def spinup(base_path, sites_path, work_path, library_path, ddc_fpath, ddclist_fp
         schedule_fpath = base_path+sch_file
 
         # execute spin-up and plot SOM to verify equilibrium
-        start = time.time()
+        start = ti.time()
         copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, library_path)
         handle = site+'_'+sch_file.split('.')[0]
         DDcentEVI(ddc_fpath, sch_file, work_path, handle, [], ddclist_fpath=ddclist_fpath, site_file_out=True)
@@ -319,7 +415,7 @@ def spinup(base_path, sites_path, work_path, library_path, ddc_fpath, ddclist_fp
 
         # clean up and report out
         clean_out(work_path, site_path, ['.bin', '.lis', '.png', '%s.100' % handle])
-        time_sec = round((time.time() - start), 2)
+        time_sec = round((ti.time() - start), 2)
         time_min = round(time_sec/60.0, 2)
         print "It took %.2f minutes total to run the spin-up." % time_min
         print
@@ -365,7 +461,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
     raw_mitigation_data_writer = csv.writer(raw_out_file_object)
 
     # initialize figure
-    fig = plt.figure(figsize=(8, 4))
+    fig = plt.figure(0, figsize=(8, 4))
     ax1 = fig.add_subplot(1, 3, 1)
     ax2 = fig.add_subplot(1, 3, 2, sharex=ax1, sharey=ax1)
     ax3 = fig.add_subplot(1, 3, 3, sharex=ax1, sharey=ax1)
@@ -446,7 +542,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
         som3c = np.array(daily_dcsip_results[55])    # Carbon in passive soil organic matter (g/m2)
 
         # compute aboveground and belowground totals from DAILY output
-        AG = aglivc
+        AG = np.array(aglivc)
         AG += rleavc
         AG += fbrchc
         AG += rlwodc
@@ -456,7 +552,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
         AG += strucc1
         AG += metabc1
 
-        BG = bglivcj
+        BG = np.array(bglivcj)
         BG += bglivcm
         BG += frootcj
         BG += frootcm
@@ -469,6 +565,61 @@ def analysis(recent_path, archive_path, run_combos, labels):
         BG += som2c1
         BG += som2c2
         BG += som3c
+
+        # compute some detailed pools for QC purposes
+        AGL_crop = np.array(aglivc)
+
+        AGD_crop = np.array(stdedc)
+
+        AGL_tree = np.array(rleavc)
+        AGL_tree += fbrchc
+        AGL_tree += rlwodc
+
+        AGD_tree = np.array(wood1c)
+        AGD_tree += wood2c
+
+        BGL_crop = np.array(bglivcj)
+        BGL_crop += bglivcm
+
+        BGL_tree = np.array(crootc)
+        BGL_tree += frootcj
+        BGL_tree += frootcm
+
+        surface_litter = np.array(strucc1)
+        surface_litter += metabc1
+
+        soil_litter = np.array(strucc2)
+        soil_litter += metabc2
+        soil_litter += wood3c
+
+        SOM = np.array(som1c1)
+        SOM += som1c2
+        SOM += som2c1
+        SOM += som2c2
+        SOM += som3c
+
+        # create biomass pool detail plots for QC purposes
+        fig_fpath = results_path + handle + '.png'
+        titles_timeseries_colors_labels = [
+
+            ('Total ecosystem C', 'b',
+             [BG, AG],
+             ['brown', 'olive'],
+             ['Total BGC', 'Total AGC']),
+
+            ('Aboveground detail', 'k',
+             [AGL_crop, AGD_crop, AGL_tree, AGD_tree, surface_litter],
+             ['lawngreen', 'gold', 'forestgreen', 'chocolate', 'grey'],
+             ['AGL crop', 'AGD crop', 'AGL tree', 'AGD tree', 'surface litter']),
+
+            ('Belowground detail', 'k',
+             [BGL_crop, BGL_tree, soil_litter, SOM],
+             ['lawngreen', 'forestgreen', 'grey', 'saddlebrown'],
+             ['BGL crop', 'BGL tree', 'soil litter', 'SOM'])
+        ]
+
+        pool_detail(days, titles_timeseries_colors_labels, fig_fpath)
+        plt.figure(0)
 
         # compute cumulative sum arrays, net change arrays, and perform unit conversions from DAILY output
         cum_NPP = np.cumsum(NPP) * 0.01
@@ -483,7 +634,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
         eco_C_MgCO2_ha = [x*3.67 for x in net_eco_MgC_ha]
 
         # compute average annual mitigation over the first 30 y of simulation only (skipping last 41)
-        avg_ecosystem_C_mitigation = eco_C_MgCO2_ha[-14975] / float(days[-14975])
+        avg_ecosystem_C_mitigation = eco_C_MgCO2_ha[time_horizon*365] / float(days[time_horizon*365])
         bar_data[5].append(avg_ecosystem_C_mitigation)
         ghge_MgCO2_ha = np.array(eco_C_MgCO2_ha)
 
@@ -497,7 +648,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
         N2Oflux += denitri
         N2O_MgCO2_ha = N2Oflux * 0.000001 * n_to_n2o * n2o_gwp100 * -1.0
         cum_N2O_MgCO2_ha = np.cumsum(N2O_MgCO2_ha)
-        avg_ecosystem_N_mitigation = cum_N2O_MgCO2_ha[-14975] / float(days[-14975])
+        avg_ecosystem_N_mitigation = cum_N2O_MgCO2_ha[time_horizon*365] / float(days[time_horizon*365])
         bar_data[6].append(avg_ecosystem_N_mitigation)
 
         ghge_MgCO2_ha += cum_N2O_MgCO2_ha
@@ -540,9 +691,9 @@ def analysis(recent_path, archive_path, run_combos, labels):
             cum_CCS_marg_MgCO2_ha = cum_CCS_marg_gCO2_m2 * 0.01
 
             ghge_MgCO2_ha += cum_ghg_avoid_MgCO2_ha
-            avg_bioenergy_mitigation = cum_ghg_avoid_MgCO2_ha[-14975] / float(days[-14975])
-            avg_supply_chain = cum_supply_chain_MgCO2_ha[-14975] / float(days[-14975])
-            avg_CCS_marg = cum_CCS_marg_MgCO2_ha[-14975] / float(days[-14975])
+            avg_bioenergy_mitigation = cum_ghg_avoid_MgCO2_ha[time_horizon*365] / float(days[time_horizon*365])
+            avg_supply_chain = cum_supply_chain_MgCO2_ha[time_horizon*365] / float(days[time_horizon*365])
+            avg_CCS_marg = cum_CCS_marg_MgCO2_ha[time_horizon*365] / float(days[time_horizon*365])
             bar_data[7].append(avg_bioenergy_mitigation)
             bar_data[8].append(avg_supply_chain)
             bar_data[9].append(avg_CCS_marg)
@@ -598,11 +749,11 @@ def analysis(recent_path, archive_path, run_combos, labels):
                 fill[color][2][1] = ghge_MgCO2_ha_plot
 
         # add to stack bar chart data structure
-        avg_NPP = cum_NPP[-14975] / float(days[-14975])
-        avg_BG = net_BG[-14975] / float(days[-14975])
-        avg_AG = net_AG[-14975] / float(days[-14975])
+        avg_NPP = cum_NPP[time_horizon*365] / float(days[time_horizon*365])
+        avg_BG = net_BG[time_horizon*365] / float(days[time_horizon*365])
+        avg_AG = net_AG[time_horizon*365] / float(days[time_horizon*365])
         avg_harv = np.mean(harvest_gc_m2[:14975]) * 0.01
-        avg_resp = (cum_loss[-14975] / float(days[-14975])) - avg_harv
+        avg_resp = (cum_loss[time_horizon*365] / float(days[time_horizon*365])) - avg_harv
         bar_data[0].append(avg_BG)
         bar_data[1].append(avg_AG)
         bar_data[2].append(avg_harv)
@@ -648,12 +799,12 @@ def analysis(recent_path, archive_path, run_combos, labels):
     # add subplot titles and horizontal lines
     ax1.axhline(color='k', zorder=5)
     ax1.set_xlabel("Years since conversion")
-    ax1.set_ylabel("GHGE mitigation (Mg $\mathregular{CO_{2}}$eq $\mathregular{(ha)^{-1}}$)")
-    ax1.set_title("Crop or pasture\nto biofuel", size=10)
+    ax1.set_ylabel("Cumulative mitigation (Mg $\mathregular{CO_{2}}$e $\mathregular{(ha)^{-1}}$)")
+    ax1.set_title("Cropland or pasture\nto biofuel production", size=10)
     ax2.axhline(color='k', zorder=5)
-    ax2.set_title("Crop or pasture\nto regrowth", size=10)
+    ax2.set_title("Cropland or pasture\nto natural vegetation", size=10)
     ax3.axhline(color='k', zorder=5)
-    ax3.set_title("70 y.o. forest\nto biofuel or\nregrowth", size=10)
+    ax3.set_title("Secondary forest\nto biofuel production\nor continued growth", size=10)
 
     # subplot formatting: declutter redundant axes, but add grids
     ax1.spines['right'].set_color('none')
@@ -706,7 +857,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
     return
 
 
-def calibration(base_path, cal_sets, calibration_path, work_path, library_path, ddc_fpath, ddclist_fpath):
+def calibration(base_path, cal_sets, calibration_path, work_path, library_path, ddc_fpath, ddclist_fpath, colors):
 
     # determine all calibration runs and prompt user to proceed
     print "Calibration will be performed for the following regions: "
@@ -716,13 +867,16 @@ def calibration(base_path, cal_sets, calibration_path, work_path, library_path, 
         cal_run = cal_path.split('/')[-1]
         print "   %s" % cal_run
         cal_regions.append(cal_run)
-    proceed = raw_input("Select 'q' to quit, 's' to re-run the calibration spin-ups, or 'enter' to proceed: ")
+
+    proceed = raw_input("Select 'q' to quit, 's' to re-run the calibration reforestation & afforestation spin-ups, or 'enter' to proceed: ")
+
     if proceed == 'q':
         return
+
     if proceed == 's':
         # determine spin-ups to run, and associated input files
         print
-        print "Please specify the number for a specific region to spin up, or 'a' for all:"
+        print "Please specify the number for a specific region to spin up (reforestation), or 'a' for all:"
         for i, combo in enumerate(cal_paths):
             print "   ", i, combo
         index = raw_input("")
@@ -730,16 +884,12 @@ def calibration(base_path, cal_sets, calibration_path, work_path, library_path, 
         if index == 'a':
             regions = cal_paths
         else:
-            print index
             index = int(index)
-            print type(index)
-            print cal_paths[index]
             regions.append(cal_paths[index])
 
         # execute spin-ups for the specified regions
         for i, cal_path in enumerate(regions):
             sch_file = cal_path.split('/')[-1]+'_pine_spinup.sch'
-            print "Executing spin-ups for %s" % cal_path
             print
 
             # determine all necessary paths
@@ -758,7 +908,7 @@ def calibration(base_path, cal_sets, calibration_path, work_path, library_path, 
                 schedule_fpath = base_path+sch_file
 
                 # execute spin-up and plot som to verify equilibrium
-                start = time.time()
+                start = ti.time()
                 copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, library_path)
                 handle = 'spinup'
                 DDcentEVI(ddc_fpath, sch_file, work_path, handle, [], ddclist_fpath=ddclist_fpath, site_file_out=True)
@@ -769,17 +919,76 @@ def calibration(base_path, cal_sets, calibration_path, work_path, library_path, 
                     years.append(year+1)
                 plt.plot(years, list(results[1]))
                 plt.xlabel('simulation time (years)')
-                plt.ylabel('total SOM (gC/m2)')
+                plt.ylabel('total SOC (gC/m2)')
                 plt.savefig(handle+'.png')
                 plt.close()
 
                 # clean up and report out
                 clean_out(work_path, site_path, ['.bin', '.lis', '.png', '%s.100' % handle])
-                time_sec = round((time.time() - start), 2)
+                time_sec = round((ti.time() - start), 2)
                 time_min = round(time_sec/60.0, 2)
-                print "It took %.2f minutes total to run the spin-up." % time_min
+                print "It took %.2f minutes total to run the reforestation spin-up." % time_min
                 print
                 print
+
+        # determine spin-ups to run, and associated input files
+        print
+        print "Please specify the number for a specific region to spin up (afforestation), or 'a' for all:"
+        for i, combo in enumerate(cal_paths):
+            print "   ", i, combo
+        index = raw_input("")
+        regions = []
+        if index == 'a':
+            regions = cal_paths
+        else:
+            index = int(index)
+            regions.append(cal_paths[index])
+
+        # execute spin-ups for the specified regions
+        for i, cal_path in enumerate(regions):
+            sch_file = 'intermediary_cropping.sch'
+            print
+
+            # determine all necessary paths
+            inter_path = cal_path+'/'
+            site_paths = filter(os.path.isdir, [os.path.join(inter_path, f) for f in os.listdir(inter_path)])
+            print "Spinning up the following sites:"
+            for site_path in site_paths:
+                print site_path
+            print
+
+            for site_path in site_paths:
+
+                site_path += '/'
+                site_fpath = site_path+'spinup.100'
+                weather_fpath = site_path+'weather.wth'
+                schedule_fpath = base_path+sch_file
+
+                # execute spin-up and plot som to verify equilibrium
+                start = ti.time()
+                copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, library_path)
+                os.rename(work_path + 'spinup.100', work_path + 'site.100')
+                handle = 'afforestation_spinup'
+                DDcentEVI(ddc_fpath, sch_file, work_path, handle, [], ddclist_fpath=ddclist_fpath, site_file_out=True)
+
+                results = read_full_out(work_path+handle+'.lis', 3, 1)
+                years = []
+                for year in range(len(results[1])):
+                    years.append(year+1)
+                plt.plot(years, list(results[1]))
+                plt.xlabel('simulation time (years)')
+                plt.ylabel('total SOC (gC/m2)')
+                plt.savefig(handle+'.png')
+                plt.close()
+
+                # clean up and report out
+                clean_out(work_path, site_path, ['.bin', '.lis', '.png', '%s.100' % handle])
+                time_sec = round((ti.time() - start), 2)
+                time_min = round(time_sec/60.0, 2)
+                print "It took %.2f minutes total to append an afforestation case on the existing spin-up." % time_min
+                print
+                print
+
     print
 
     # clear out current_results directory
@@ -792,9 +1001,9 @@ def calibration(base_path, cal_sets, calibration_path, work_path, library_path, 
     description = raw_input("in place of spaces:  ")
 
     # execute calibration simulations
-    start = time.time()
+    start = ti.time()
     for cal_set in cal_sets:
-        region, reference_values = cal_set
+        region, _, _ = cal_set
         sch_file = region+'_greenbook.sch'
         region_path = calibration_path+region+'/'
         schedule_fpath = base_path + '/' + sch_file
@@ -803,31 +1012,34 @@ def calibration(base_path, cal_sets, calibration_path, work_path, library_path, 
         for cal_site_path in cal_site_paths:
             print "Running calibration simulation %s..." % cal_site_path
             print
-
-            # define all input file paths
             index = cal_site_path[-1:]
             cal_site_path += '/'
-            site_fpath = cal_site_path+'spinup.100'
-            weather_fpath = cal_site_path+'weather.wth'
-            binary_fpath = cal_site_path+'spinup.bin'
-            if not os.path.exists(binary_fpath):
-                print "*** ERROR: No spin-up exists at ", binary_fpath
-                print
-                return
+            weather_fpath = cal_site_path + 'weather.wth'
 
-            # move files, execute simulations, and clean up
-            copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, library_path)
-            os.rename(work_path+'spinup.100', work_path+'site.100')
-            handle = region+'_'+index+'_'+sch_file[:-4]
-            DDcentEVI(ddc_fpath, sch_file, work_path, handle, ['dc_sip.csv'], ddclist_fpath=ddclist_fpath)
-            clean_out(work_path, recent_path, ['.bin', '.lis', 'dc_sip.csv'])
-            print
+            for case in ['spinup', 'afforestation_spinup']:
+
+                # define all input file paths
+                site_fpath = cal_site_path+'%s.100' % case
+                binary_fpath = cal_site_path+'%s.bin' % case
+                if not os.path.exists(binary_fpath):
+                    print "*** ERROR: No spin-up exists at ", binary_fpath
+                    print
+                    return
+
+                # move files, execute simulations, and clean up
+                copy_in(work_path, schedule_fpath, site_fpath, weather_fpath, library_path)
+                os.rename(work_path+'%s.100' % case, work_path+'site.100')
+                handle = region+'_'+index+'_'+case+'_'+sch_file[:-4]
+                DDcentEVI(ddc_fpath, sch_file, work_path, handle, ['dc_sip.csv'], ddclist_fpath=ddclist_fpath)
+                clean_out(work_path, recent_path, ['.bin', '.lis', 'dc_sip.csv'])
+                print
+
             print
 
     # report out
     print "****************************************************************************"
     print
-    time_sec = round((time.time() - start), 2)
+    time_sec = round((ti.time() - start), 2)
     time_min = round(time_sec/60.0, 2)
     print "It took %.2f minutes total to execute the specified DayCent calibration ensemble." % time_min
     print
@@ -840,105 +1052,232 @@ def calibration(base_path, cal_sets, calibration_path, work_path, library_path, 
         move_fpath = results_path+file_name
         shutil.move(file, move_fpath)
 
+    def cal_data_extraction(lis_fpath, dead_data_structure, total_data_structure):
+
+        results = read_full_out(lis_fpath, 4, 1)
+
+        # annual output data processing
+        years = []
+        for year in range(len(results[0])):
+            years.append(year + 1)
+        # time = np.array(results[0])
+        # somsc = np.array(results[1])
+        # crmvst = np.array(results[2])
+        # aglivc = np.array(results[3])
+        # stdedc = np.array(results[4])
+        # fbrchc = np.array(results[5])
+        rlwodc = np.array(results[6])
+        wood1c = np.array(results[7])
+        wood2c = np.array(results[8])
+        # totsysc = np.array(results[9])
+        # agcacc = np.array(results[10])
+        fbracc = np.array(results[11])
+        # rlwacc = np.array(results[12])
+        # tcrem = np.array(results[13])
+        rleavc = np.array(results[14])
+        crootc = np.array(results[15])
+        # wood3c = np.array(results[16])
+        # prcann = np.array(results[17])
+        # aglive1 = np.array(results[18])
+        # bglivej1 = np.array(results[19])
+        # bglivem1 = np.array(results[20])
+        # stdede1 = np.array(results[21])
+        # TOTSYSE1 = np.array(results[22])
+        rleave1 = np.array(results[23])
+        frootej1 = np.array(results[24])
+        frootem1 = np.array(results[25])
+        fbrche1 = np.array(results[26])
+        rlwode1 = np.array(results[27])
+        croote1 = np.array(results[28])
+        wood1e1 = np.array(results[29])
+        wood2e1 = np.array(results[30])
+        wood3e1 = np.array(results[31])
+        struce11 = np.array(results[32])
+        struce21 = np.array(results[33])
+        metabe11 = np.array(results[34])
+        metabe21 = np.array(results[35])
+        som1e11 = np.array(results[36])
+        som2e11 = np.array(results[37])
+        tminrl1 = np.array(results[38])
+        som1e21 = np.array(results[39])
+        som2e21 = np.array(results[40])
+        som3e1 = np.array(results[41])
+
+        # compute live and dead biomass totals, units conversion
+        deadc = wood1c  # g / m2
+        deadc += wood2c
+
+        totalc = deadc.copy()  # g / m2
+        totalc += rlwodc
+        totalc += fbracc
+        totalc += rleavc
+        totalc += crootc
+
+        deadc_Mg_ha = deadc * 0.01
+        totalc_Mg_ha = totalc * 0.01
+        dead_data_structure.append(deadc_Mg_ha)
+        total_data_structure.append(totalc_Mg_ha)
+
+        # calculating N balance
+        tree_live_N = (rleave1 + frootej1 + frootem1 + fbrche1 + rlwode1 + croote1) * 0.01
+        dead_wood_N = (wood1e1 + wood2e1) * 0.01
+        dead_root_litter_N = (wood3e1 + struce11 + struce21 + metabe11 + metabe21 + som1e11 + som2e11) * 0.01
+        soil_N = (tminrl1 + som1e21 + som2e21 + som3e1) * 0.01
+
+        return years, tree_live_N, dead_wood_N, dead_root_litter_N, soil_N
+
     # step through calibration sets, read associated output files, process results, and add to figures as appropriate
     for cal_set in cal_sets:
-        region, reference_values = cal_set
-        deadc_Mg_ha_set = []
-        totalc_Mg_ha_set = []
-        region_path = calibration_path+region+'/'
+        region, time_list, forest_C_dict = cal_set
+        region_path = calibration_path + region + '/'
         cal_site_paths = filter(os.path.isdir, [os.path.join(region_path, f) for f in os.listdir(region_path)])
+
+        # define results data structures
+        reforestation_deadc_Mg_ha_set = []
+        reforestation_totalc_Mg_ha_set = []
+        afforestation_deadc_Mg_ha_set = []
+        afforestation_totalc_Mg_ha_set = []
+        tree_live_N_Mg_ha_set = []
+        dead_wood_N_Mg_ha_set = []
+        dead_root_litter_N_Mg_ha_set = []
+        soil_N_Mg_ha_set = []
 
         for cal_site_path in cal_site_paths:
             index = cal_site_path[-1:]
             cal_site_path += '/'
-            handle = region+'_'+index+'_'+region+'_greenbook'
             print "Processing case %s..." % cal_site_path
+
+            # analyze reforestation results
+            handle = region + '_' + index + '_spinup_' + region + '_greenbook'
             lis_fpath = results_path+handle+'.lis'
-            results = read_full_out(lis_fpath, 4, 1)
+            years, _, _, _, _ = cal_data_extraction(lis_fpath, reforestation_deadc_Mg_ha_set, reforestation_totalc_Mg_ha_set)
 
-            # annual output data processing
-            years = []
-            for year in range(len(results[0])):
-                years.append(year+1)
-            # time = np.array(results[0])
-            # somsc = np.array(results[1])
-            # crmvst = np.array(results[2])
-            # aglivc = np.array(results[3])
-            # stdedc = np.array(results[4])
-            # fbrchc = np.array(results[5])
-            rlwodc = np.array(results[6])
-            wood1c = np.array(results[7])
-            wood2c = np.array(results[8])
-            # totsysc = np.array(results[9])
-            # agcacc = np.array(results[10])
-            fbracc = np.array(results[11])
-            # rlwacc = np.array(results[12])
-            # tcrem = np.array(results[13])
-            rleavc = np.array(results[14])
-            crootc = np.array(results[15])
-            # wood3c = np.array(results[16])
-
-            # compute live and dead biomass totals, units conversion
-            deadc = wood1c   # g / m2
-            deadc += wood2c
-
-            totalc = deadc.copy()   # g / m2
-            totalc += rlwodc
-            totalc += fbracc
-            totalc += rleavc
-            totalc += crootc
-
-            deadc_Mg_ha = deadc * 0.01
-            totalc_Mg_ha = totalc * 0.01
-            deadc_Mg_ha_set.append(deadc_Mg_ha)
-            totalc_Mg_ha_set.append(totalc_Mg_ha)
+            # analyze afforestation results
+            handle = region + '_' + index + '_afforestation_spinup_' + region + '_greenbook'
+            lis_fpath = results_path + handle + '.lis'
+            years, tree_live_N, dead_wood_N, dead_root_litter_N, soil_N = \
+                cal_data_extraction(lis_fpath, afforestation_deadc_Mg_ha_set, afforestation_totalc_Mg_ha_set)
+            tree_live_N_Mg_ha_set.append(tree_live_N)
+            dead_wood_N_Mg_ha_set.append(dead_wood_N)
+            dead_root_litter_N_Mg_ha_set.append(dead_root_litter_N)
+            soil_N_Mg_ha_set.append(soil_N)
 
         # report the spread in results
         print
-        print "End-of-simulation variability in total ecosystem carbon (Mg C ha-1):"
-        for totalc_Mg_ha in totalc_Mg_ha_set:
+        print "End-of-simulation variability in reforestation total ecosystem carbon (Mg C ha-1):"
+        for totalc_Mg_ha in reforestation_totalc_Mg_ha_set:
+            print totalc_Mg_ha[-1]
+        print
+        print "End-of-simulation variability in afforestation total ecosystem carbon (Mg C ha-1):"
+        for totalc_Mg_ha in afforestation_totalc_Mg_ha_set:
             print totalc_Mg_ha[-1]
         print
 
-        # compute average simulated across sites and plot versus reference
-        length = len(totalc_Mg_ha_set)
-        deadc_Mg_ha_avg = 0
-        totalc_Mg_ha_avg = 0
-        for i in range(length):
-            if i==0:
-                deadc_Mg_ha_avg = deadc_Mg_ha_set[0]
-                totalc_Mg_ha_avg = totalc_Mg_ha_set[0]
-            else:
-                deadc_Mg_ha_avg += deadc_Mg_ha_set[i]
-                totalc_Mg_ha_avg += totalc_Mg_ha_set[i]
-        deadc_Mg_ha_avg /= float(length)
-        totalc_Mg_ha_avg /= float(length)
+        # # plot raw DayCent run results
+        # for run in reforestation_totalc_Mg_ha_set:
+        #     plt.plot(years, run, marker='None', linestyle=':', linewidth=0.5, color='m')
+        # for run in afforestation_totalc_Mg_ha_set:
+        #     plt.plot(years, run, marker='None', linestyle=':', linewidth=0.5, color='r')
 
-        # plot observed & modeled ecosystem carbon trends
-        plt.plot(years, deadc_Mg_ha_avg, marker='None', linestyle='-', color='r', label='DayCent simulated dead C')
-        plt.plot(years, totalc_Mg_ha_avg, marker='None', linestyle='-', color='g', label='DayCent simulated total (live+dead) C')
+        # convert to numpy array structure and compute average behavior
+        np.asarray(reforestation_deadc_Mg_ha_set)
+        np.asarray(reforestation_totalc_Mg_ha_set)
+        np.asarray(afforestation_deadc_Mg_ha_set)
+        np.asarray(afforestation_totalc_Mg_ha_set)
+        np.asarray(tree_live_N_Mg_ha_set)
+        np.asarray(dead_wood_N_Mg_ha_set)
+        np.asarray(dead_root_litter_N_Mg_ha_set)
+        np.asarray(soil_N_Mg_ha_set)
 
-        ref_years = np.array(reference_values[0])
-        ref_livec = np.array(reference_values[1])
-        ref_deadc = np.array(reference_values[2])
-        ref_totalc = ref_deadc.copy()
-        ref_totalc += ref_livec
-        plt.scatter(ref_years, ref_deadc, marker='o', color='r', label='Greenbook estimated dead C')
-        plt.scatter(ref_years, ref_totalc, marker='o', color='g', label='Greenbook estimated total (live+dead) C')
+        reforestation_deadc_avg = np.mean(reforestation_deadc_Mg_ha_set, axis=0)
+        reforestation_totalc_avg = np.mean(reforestation_totalc_Mg_ha_set, axis=0)
+        afforestation_totalc_avg = np.mean(afforestation_totalc_Mg_ha_set, axis=0)
+        global_totalc_avg = np.mean(np.array([reforestation_totalc_avg, afforestation_totalc_avg]), axis=0)
+
+        tree_live_N_avg = np.mean(tree_live_N_Mg_ha_set, axis=0)
+        dead_wood_N_avg = np.mean(dead_wood_N_Mg_ha_set, axis=0)
+        dead_root_litter_N_avg = np.mean(dead_root_litter_N_Mg_ha_set, axis=0)
+        soil_N_avg = np.mean(soil_N_Mg_ha_set, axis=0)
+
+        ### plot biomass calibration results ##########################################################################
+        # fill zone between min and max values for reforestation and afforestation cases
+        plt.fill_between(years,
+                         np.amin(reforestation_totalc_Mg_ha_set, axis=0),
+                         np.amax(reforestation_totalc_Mg_ha_set, axis=0),
+                         facecolor='b', alpha=0.25, linewidth=0.0)
+        plt.fill_between(years,
+                         np.amin(afforestation_totalc_Mg_ha_set, axis=0),
+                         np.amax(afforestation_totalc_Mg_ha_set, axis=0),
+                         facecolor='r', alpha=0.25, linewidth=0.0)
+
+        # plot Greenbook target data
+        for i, forest_key in enumerate(forest_C_dict):
+            ref_deadc = np.array(forest_C_dict[forest_key][0])
+            ref_livec = np.array(forest_C_dict[forest_key][1])
+            ref_totalc = ref_deadc.copy()
+            ref_totalc += ref_livec
+            plt.plot(time_list, ref_deadc, marker='+', ls=':', color=colors[i])
+            plt.plot(time_list, ref_totalc, marker='o', color=colors[i], label=forest_key)
+
+        # add dummy legend spacer
+        plt.plot([], [], color='w', label='  ')
+
+        # plot averaged DayCent results
+        plt.plot(years, reforestation_totalc_avg, marker='None', linestyle='-', linewidth=2.0, color='b',
+                 label='DayCent, forest-following-forest')
+        plt.plot(years, reforestation_deadc_avg, marker='None', linestyle=':', linewidth=2.0, color='b')
+        plt.plot(years, afforestation_totalc_avg, marker='None', linestyle='-', linewidth=2.0, color='r',
+                 label='DayCent, forest-following-crop')
+        # plt.plot(years, global_totalc_avg, marker='None', linestyle='-', linewidth=2.0, color='r',
+        #          label='DayCent-simulated (average)')
+
+        # more legend
+        plt.plot([], [], color='w', label='  ')
+        plt.plot([], [], marker='o', color='k', label='total (live+dead) carbon')
+        plt.plot([], [], marker='+', color='k', ls=':', label='dead carbon')
 
         plt.xlabel('Stand age (y)')
-        plt.ylabel('Stand biomass (MgC/ha)')
-        plt.title('%s regional calibration' % region)
+        plt.ylabel('Carbon density (Mg C ha-1)')
+        # plt.title('%s regional biomass calibration' % region)
         plt.axhline(0, color='k')
-        plt.axvline(70, color='grey', linewidth=10, alpha=0.3)
-        plt.legend(loc=2, frameon=False, prop={'size': 11})
-        plt.savefig(results_path+'%s_calibration.png' % region)
+        # plt.axvline(70, color='grey', linewidth=10, alpha=0.3)
+        leg = plt.legend(title='Forest type:', loc=2, frameon=False, numpoints=1, prop={'size': 8})
+        leg._legend_box.align = "left"
+        plt.savefig(results_path+'%s_biomass_calibration.png' % region)
         plt.close()
 
-        # report final productivity for calibration purposes
-        print "Observed and modeled end-of-simulation productivity (Mg C ha-1)"
-        print "   Observed: %.1f  Modeled: %.1f" % (ref_totalc[-1], totalc_Mg_ha_avg[-1])
-        print "   Modeled/observed ratio: %.3f" % (totalc_Mg_ha_avg[-1]/float(ref_totalc[-1]))
+        ### plot nitrogen calibration results ##########################################################################
+
+        # plot area chart
+        plt.stackplot(years, soil_N_avg, dead_root_litter_N_avg, dead_wood_N_avg, tree_live_N_avg,
+                      labels=['soil N (organic & mineral)', 'dead root & litter N',
+                              'dead wood N', 'live tree N'],
+                      colors=['#b26400', 'grey', 'gold', 'g'],
+                      linewidth=0)
+
+        # plot literature-based target data
+        time = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+        initial_N = soil_N_avg[0]
+        target_accumulation_rates = [0.0123, 0.018]  # Mg N ha-1 y-1
+        target_labels = ['Knops & Tilman (2000) soil N', 'Paul et al. (2003) soil N']
+        target_linestyles = ['--', '-.']
+        for e, rate in enumerate(target_accumulation_rates):
+            target = [rate * X + initial_N for X in time]
+            plt.plot(time, target, label=target_labels[e], color='#60460f', linestyle=target_linestyles[e])
+
+        # plot formatting
+        # plt.ylim(0, 500)
+        plt.xlabel('Stand age (y)')
+        plt.ylabel('Nitrogen density (Mg N ha-1)')
+        # plt.title('%s regional nitrogen calibration' % region)
+        plt.plot([], [], color='w', label='  ')
+        plt.plot([], [], color='w', label='DayCent:')
+        leg = plt.legend(loc=2, frameon=False, numpoints=1, prop={'size': 8})
+        leg._legend_box.align = "left"
+        # plt.grid()
+        plt.savefig(results_path + '%s_nitrogen_calibration.png' % region)
+        plt.close()
+
         print
 
 
@@ -1169,26 +1508,71 @@ run_combos = [
 ]
 
 labels = [
-    ('Secondary pine forest growth', 'saddlebrown', '-', 2),
-    ('Secondary grassland growth', 'g', '-', 2),
-    ('Current switchgrass biofuels', 'deepskyblue', '-', 2),
-    ('Mature switchgrass biofuels', 'royalblue', '-', 2),
-    ('Mature switchgrass biofuels w/ CCS', 'navy', '-', 2)
+    ('Reforestation or continued\nsecondary forest growth', 'saddlebrown', '-', 2),
+    ('Grassland restoration', 'g', '-', 2),
+    ('Current biofuel production', 'deepskyblue', '-', 2),
+    ('Future biofuel production', 'royalblue', '-', 2),
+    ('Future biofuel production + CCS', 'navy', '-', 2)
 ]
 
+
+# http://colorbrewer2.org/#type=diverging&scheme=BrBG&n=6
+divergent_colors_int = [[1,102,94], [90,180,172], [199,234,229], [246,232,195], [216,179,101], [140,81,10]]
+# http://colorbrewer2.org/#type=qualitative&scheme=Set2&n=6
+# qual_colors_int = [[102,194,165], [252,141,98], [141,160,203], [231,138,195], [166,216,84], [255,217,47]]
+my_colors = []
+for color in divergent_colors_int:
+    my_colors.append((color[0]/255.0, color[1]/255.0, color[2]/255.0))
+
+NY_WayneCo_forests = OrderedDict()
+NY_WayneCo_forests['Oak-hickory'] = [[46.7,32.1,20.1,14.8,13.4,13.7,14.5,15.6,16.7,17.8], [2.1,9.0,44.9,73.8,98.0,120.0,138.6,156.1,172.4,187.8]]
+NY_WayneCo_forests['Maple-beech-birch'] = [[32.0,22.4,14.7,13.1,12.9,13.6,14.5,15.6,16.5,17.4], [2.1,9.5,33.7,55.0,74.5,89.5,102.8,114.8,125.5,135.2]]
+NY_WayneCo_forests['Aspen-birch'] = [[18.7,13.5,8.9,8.1,8.7,9.9,11.3,12.8,14.3,15.9], [2.0,8.8,23.4,38.1,52.2,64.8,77.1,89.5,102.0,114.7]]
+NY_WayneCo_forests['Oak-pine'] = [[30.0,23.6,17.2,13.6,12.1,11.6,11.6,12.1,12.6,13.1], [4.2,10.4,30.3,51.5,70.5,87.2,101.5,115.3,125.9,135.4]]
+NY_WayneCo_forests['White-red-jack pine'] = [[20.4,16.5,13.3,11.4,10.4,10.1,10.1,10.3,10.7,11.1], [2.1,9.5,30.4,46.5,59.4,71.1,80.3,88.4,95.9,102.8]]
+NY_WayneCo_forests['Spruce-balsam fir'] = [[20.3,16.7,12.6,11.3,11.7,12.6,14.2,15.2,16.0,16.9], [2.1,8.8,21.7,34.0,47.1,58.8,70.1,79.9,89.2,97.8]]
+# 'Elm-ash-cottonwood':
+
+IA_forests = OrderedDict()
+IA_forests['Elm-ash-cottonwood'] = [[11.3,8.1,4.8,4.1,5.3,7.6,9.9,11.6,13.2,14.8], [2.1,6.0,11.4,17.9,29.9,45.2,62.1,80.7,98.3,115.7]]
+IA_forests['Maple-beech-birch'] = [[12.8,9.3,5.5,4.6,5.6,6.7,7.7,8.8,9.8,10.8], [2.1,7.3,12.4,20.2,31.3,42.8,55.0,67.8,80.9,94.1]]
+IA_forests['Oak-hickory'] = [[14.1,10.4,6.8,6.4,6.7,7.5,8.4,9.2,10.0,10.7], [2.1,9.1,17.7,29.5,41.9,54.0,66.1,76.4,86.3,95.4]]
+IA_forests['Oak-pine'] = [[17.8,14.2,9.9,9.1,9.2,9.8,10.6,11.4,12.1,12.7], [4.2,9.3,18.1,33.4,50.7,66.4,79.9,92.3,101.7,109.5]]
+# 'Loblolly-shortleaf pine'
+# 'Ponderosa pine'
+
+LA_forests = OrderedDict()
+LA_forests['Oak-hickory'] = [[10.8,	7.5,	6.9,	6.3,	6.3,	6.6,	7.0,	7.6,	8.2,	9.0,	9.7,	10.3,	10.9,	11.5,	12.0,	12.5,	12.9,	13.3],
+    [4.2,	12.3,	24.8,	33.8,	43.3,	52.7,	60.6,	69.6,	79.1,	89.3,	98.6,	107.6,	115.7,	123.5,	130.7,	137.0,	143.1,	148.8]]
+LA_forests['Oak-gum-cypress'] = [[10.2,6.9,6.4,6.1,6.3,6.7,7.2,7.8,8.6,9.4,10.1,10.8,11.4,12.2,12.9,13.4,13.9,14.6],
+    [1.8,	8.6,	20.6,	30.0,	39.7,	48.4,	55.6,	63.9,	73.5,	82.5,	90.5,	98.8,	107.4,	116.0,	124.0,	130.8,	136.9,	144.4]]
+LA_forests['Oak-pine'] = [[11.3,	9.6,	8.9,	8.3,	8.1,	7.9,	7.9,	8.2,	8.6,	8.9,	9.2,	9.6,	10.0,	10.4,	10.8,	11.2,	11.6,	11.8],
+    [4.2,	11.5,	23.2,	32.8,	42.4,	50.1,	58.6,	67.6,	76.5,	84.7,	92.0,	99.0,	106.2,	112.1,	117.6,	123.5,	128.4,	132.8]]
+LA_forests['Loblolly-shortleaf pine'] = [[9.9,9.1,8.8,8.4,8.5,8.6,8.9,9.1,9.4,9.9,10.2,10.6,11.0,11.2,11.6,11.9,12.2,12.5],
+    [4.2,15.1,26.2,34.7,44.0,53.4,61.3,68.6,75.5,81.8,87.9,93.2,97.9,102.4,106.8,110.4,114.2,117.9]]
+LA_forests['Longleaf-slash pine'] = [[9.7,8.2,7.6,6.9,6.7,6.7,6.8,7.0,7.3,7.6,8.0,8.3,8.6,9.0,9.3,9.5,9.8,10.1],
+    [4.2,9.5,17.9,25.0,33.8,42.5,50.4,57.9,64.9,71.5,77.7,83.3,88.3,93.0,97.6,101.4,105.4,109.4]]
+# 'Elm-ash-cottonwood'
+
+# calibration_data = [
+#     ('NY_WayneCo',
+#      [[0, 5, 15, 25, 35, 45, 55, 65, 75, 85],
+#       [2.1, 9.5, 30.4, 46.5, 59.4, 71.1, 80.3, 88.4, 95.9, 102.8],
+#       [20.4, 16.5, 13.3, 11.4, 10.4, 10.1, 10.1, 10.3, 10.7, 11.1]]),
+#     ('IA',
+#      [[0, 5, 15, 25, 35, 45, 55, 65, 75, 85],
+#       [4.2, 9.3, 18.1, 33.4, 50.7, 66.4, 79.9, 92.3, 101.7, 109.5],
+#       [17.8, 14.2, 9.9, 9.1, 9.2, 9.8, 10.6, 11.4, 12.1, 12.7]]),
+#     ('LA',
+#      [[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85],
+#       [4.2, 15.5, 27.0, 35.9, 45.5, 55.1, 62.6, 69.5, 76.0, 81.8, 87.5, 92.3, 96.7, 100.7, 104.8, 108.1, 111.5, 114.9],
+#       [9.2, 8.4, 8.1, 7.8, 7.7, 7.8, 7.9, 8.2, 8.3, 8.5, 8.9, 9.1, 9.3, 9.7, 9.9, 10.0, 10.4, 10.6]])
+# ]
+
 calibration_data = [
-    ('NY_WayneCo',
-     [[0, 5, 15, 25, 35, 45, 55, 65, 75, 85],
-      [2.1, 9.5, 30.4, 46.5, 59.4, 71.1, 80.3, 88.4, 95.9, 102.8],
-      [20.4, 16.5, 13.3, 11.4, 10.4, 10.1, 10.1, 10.3, 10.7, 11.1]]),
-    ('IA',
-     [[0, 5, 15, 25, 35, 45, 55, 65, 75, 85],
-      [4.2, 9.3, 18.1, 33.4, 50.7, 66.4, 79.9, 92.3, 101.7, 109.5],
-      [17.8, 14.2, 9.9, 9.1, 9.2, 9.8, 10.6, 11.4, 12.1, 12.7]]),
-    ('LA',
-     [[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85],
-      [4.2, 15.5, 27.0, 35.9, 45.5, 55.1, 62.6, 69.5, 76.0, 81.8, 87.5, 92.3, 96.7, 100.7, 104.8, 108.1, 111.5, 114.9],
-      [9.2, 8.4, 8.1, 7.8, 7.7, 7.8, 7.9, 8.2, 8.3, 8.5, 8.9, 9.1, 9.3, 9.7, 9.9, 10.0, 10.4, 10.6]])
+    ('NY_WayneCo', [0, 5, 15, 25, 35, 45, 55, 65, 75, 85], NY_WayneCo_forests),
+    ('IA', [0, 5, 15, 25, 35, 45, 55, 65, 75, 85], IA_forests),
+    ('LA', [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85], LA_forests)
 ]
 
 # initiate interactive routine
@@ -1237,7 +1621,8 @@ while True:
     elif command == 'c':
         print "   Running calibration of pine model..."
         print
-        calibration(base_path, calibration_data, calibration_path, work_path, library_path, ddc_fpath, ddclist_fpath)
+        calibration(base_path, calibration_data, calibration_path, work_path, library_path, ddc_fpath, ddclist_fpath,
+                    my_colors)
         print
         print
     elif command == 'p':
