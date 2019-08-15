@@ -56,9 +56,11 @@ matplotlib.style.use('classic')
 import matplotlib.pyplot as plt
 import numpy as np
 import sqlite3
+from scipy import stats
 
 
 # define constants
+co2_to_c = 44.01/12.01
 n_to_n2o = 44.013/28.014
 n2o_gwp100 = 298.0
 time_horizon = 30   # years
@@ -170,18 +172,18 @@ def bioenergy_ghg_avoid_gCO2eq_m2(biomass_gC_m2_array, conversion_tech):
 
     if conversion_tech == 'current':
         gross_GHG_int_avoided_g_kg = 652.
-        ghg_int_conversion_g_kg = 100.8
         CCS_marg_GHG_int_g_kg = 0
+        ghg_int_conversion_g_kg = 100.8
 
     elif conversion_tech == 'mature':
-        gross_GHG_int_avoided_g_kg = 1101.
+        gross_GHG_int_avoided_g_kg = 1072.
+        CCS_marg_GHG_int_g_kg = 25.
         ghg_int_conversion_g_kg = 37.9
-        CCS_marg_GHG_int_g_kg = 0
 
     elif conversion_tech == 'CCS':
-        gross_GHG_int_avoided_g_kg = 1029.
+        gross_GHG_int_avoided_g_kg = 995.
+        CCS_marg_GHG_int_g_kg = 916.
         ghg_int_conversion_g_kg = 37.9
-        CCS_marg_GHG_int_g_kg = 846.
 
     # calculate biomass supply array
     biomass_c_conc = 0.5
@@ -194,7 +196,7 @@ def bioenergy_ghg_avoid_gCO2eq_m2(biomass_gC_m2_array, conversion_tech):
     lifecycle_ghg_g_m2 = []
     for biomass_kg_m2 in biomass_array_kg_m2:
         if biomass_kg_m2:
-            ghg_feedstock_farming_gCO2e_m2 = 82.101 * (biomass_kg_m2 ** -0.63)
+            ghg_feedstock_farming_gCO2e_m2 = (82.101 * (biomass_kg_m2 ** -0.63)) * biomass_kg_m2
             ghg_conversion_gCO2e_m2 = ghg_int_conversion_g_kg * biomass_kg_m2  # g CO2eq m-2 y-1
         else:
             ghg_feedstock_farming_gCO2e_m2 = 0.
@@ -631,7 +633,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
         cum_loss -= net_BG
         net_eco_MgC_ha = net_AG + net_BG
         net_eco_MgC_ha.tolist()
-        eco_C_MgCO2_ha = [x*3.67 for x in net_eco_MgC_ha]
+        eco_C_MgCO2_ha = [x*co2_to_c for x in net_eco_MgC_ha]
 
         # compute average annual mitigation over the first 30 y of simulation only (skipping last 41)
         avg_ecosystem_C_mitigation = eco_C_MgCO2_ha[time_horizon*365] / float(days[time_horizon*365])
@@ -669,6 +671,8 @@ def analysis(recent_path, archive_path, run_combos, labels):
                 daily_harvest_g_m2.append(0)
             daily_counter += 1
         daily_harvest_g_m2 = np.array(daily_harvest_g_m2)
+        cum_harvest_gC_m2 = np.cumsum(daily_harvest_g_m2)
+        cum_harvest_MgC_ha = cum_harvest_gC_m2 * 0.01
 
         # compute bioenergy GHG mitigation
         if tech:
@@ -727,6 +731,11 @@ def analysis(recent_path, archive_path, run_combos, labels):
                 fill[color][0][1] = np.maximum(fill[color][0][1], ghge_MgCO2_ha_plot)
             else:
                 fill[color][0][1] = ghge_MgCO2_ha_plot
+
+            # # compute mitigation curve slope as a QC comparison to annually-averaged results
+            # slope, intercept, r_value, p_value, std_error = stats.linregress(days_plot, ghge_MgCO2_ha_plot)
+            # print slope
+
         if axis == 2:
             ax2.plot(days_plot, ghge_MgCO2_ha_plot, color=color, linewidth=1)
             if list(fill[color][1][0]):
@@ -752,7 +761,7 @@ def analysis(recent_path, archive_path, run_combos, labels):
         avg_NPP = cum_NPP[time_horizon*365] / float(days[time_horizon*365])
         avg_BG = net_BG[time_horizon*365] / float(days[time_horizon*365])
         avg_AG = net_AG[time_horizon*365] / float(days[time_horizon*365])
-        avg_harv = np.mean(harvest_gc_m2[:14975]) * 0.01
+        avg_harv = cum_harvest_MgC_ha[time_horizon * 365] / float(days[time_horizon * 365])
         avg_resp = (cum_loss[time_horizon*365] / float(days[time_horizon*365])) - avg_harv
         bar_data[0].append(avg_BG)
         bar_data[1].append(avg_AG)
@@ -1432,16 +1441,6 @@ CFARM_db_fpath = '/data/paustian/AFRI/simulations/landscape/Hugoton_34.db'
 run_combos = [
 
     #site,        spin-up.sch,                     simulation.sch,                  bio-tech,  color,    detail, ax
-    ## PASTURE reforestation (unfertilized pine)
-    ('NY_coarse', 'pine_pasture_eq_NY.sch',        'forest_NY.sch',                 '',        'saddlebrown', 0, 2),
-    ('IA_coarse', 'pine_pasture_eq_IA.sch',        'forest_IA.sch',                 '',        'saddlebrown', 0, 2),
-    ('LA_coarse', 'pine_pasture_eq_LA.sch',        'forest_LA.sch',                 '',        'saddlebrown', 0, 2),
-
-    ## PASTURE reversion to grassland (unfertilized switchgrass, ungrazed)
-    ('NY_coarse', 'grass_pasture_eq.sch',          'grass_NY.sch',                  '',        'g',           0, 2),
-    ('IA_coarse', 'grass_pasture_eq.sch',          'grass_IA.sch',                  '',        'g',           0, 2),
-    ('LA_coarse', 'grass_pasture_eq.sch',          'grass_LA.sch',                  '',        'g',           0, 2),
-
     ## PASTURE conversion to energy grass (fertilized switchgrass, ungrazed) - current technology
     ('NY_coarse', 'grass_pasture_eq.sch',          'switchgrass_NY.sch',            'current', 'deepskyblue', 0, 1),
     ('IA_coarse', 'grass_pasture_eq.sch',          'switchgrass_IA.sch',            'current', 'deepskyblue', 0, 1),
@@ -1457,18 +1456,18 @@ run_combos = [
     ('IA_coarse', 'grass_pasture_eq.sch',          'switchgrass_fut_IA.sch',        'CCS',     'navy',        0, 1),
     ('LA_coarse', 'grass_pasture_eq.sch',          'switchgrass_fut_LA.sch',        'CCS',     'navy',        0, 1),
 
+    ## PASTURE reforestation (unfertilized pine)
+    ('NY_coarse', 'pine_pasture_eq_NY.sch',        'forest_NY.sch',                 '',        'saddlebrown', 0, 2),
+    ('IA_coarse', 'pine_pasture_eq_IA.sch',        'forest_IA.sch',                 '',        'saddlebrown', 0, 2),
+    ('LA_coarse', 'pine_pasture_eq_LA.sch',        'forest_LA.sch',                 '',        'saddlebrown', 0, 2),
+
+    ## PASTURE reversion to grassland (unfertilized switchgrass, ungrazed)
+    ('NY_coarse', 'grass_pasture_eq.sch',          'grass_NY.sch',                  '',        'g',           0, 2),
+    ('IA_coarse', 'grass_pasture_eq.sch',          'grass_IA.sch',                  '',        'g',           0, 2),
+    ('LA_coarse', 'grass_pasture_eq.sch',          'grass_LA.sch',                  '',        'g',           0, 2),
+
 
     #site,        spin-up.sch,                     simulation.sch,                  bio-tech,  color,    detail, ax
-    ## CROPLAND reforestation (unfertilized pine)
-    ('NY_fine',   'pine_lowSOCcrop_eq_NY.sch',     'forest_NY.sch',                 '',        'saddlebrown', 0, 2),
-    ('IA_fine',   'pine_lowSOCcrop_eq_IA.sch',     'forest_IA.sch',                 '',        'saddlebrown', 0, 2),
-    ('LA_fine',   'pine_lowSOCcrop_eq_LA.sch',     'forest_LA.sch',                 '',        'saddlebrown', 0, 2),
-
-    ## CROPLAND reversion to grassland (unfertilized switchgrass, ungrazed)
-    ('NY_fine',   'grass_lowSOCcrop_eq.sch',       'grass_NY.sch',                  '',        'g',           0, 2),
-    ('IA_fine',   'grass_lowSOCcrop_eq.sch',       'grass_IA.sch',                  '',        'g',           0, 2),
-    ('LA_fine',   'grass_lowSOCcrop_eq.sch',       'grass_LA.sch',                  '',        'g',           0, 2),
-
     ## CROPLAND conversion to energy grass (fertilized switchgrass, ungrazed) - current technology
     ('NY_fine',   'grass_lowSOCcrop_eq.sch',       'switchgrass_NY.sch',            'current', 'deepskyblue', 0, 1),
     ('IA_fine',   'grass_lowSOCcrop_eq.sch',       'switchgrass_IA.sch',            'current', 'deepskyblue', 0, 1),
@@ -1484,13 +1483,18 @@ run_combos = [
     ('IA_fine',   'grass_lowSOCcrop_eq.sch',       'switchgrass_fut_IA.sch',        'CCS',     'navy',        0, 1),
     ('LA_fine',   'grass_lowSOCcrop_eq.sch',       'switchgrass_fut_LA.sch',        'CCS',     'navy',        0, 1),
 
+    ## CROPLAND reforestation (unfertilized pine)
+    ('NY_fine',   'pine_lowSOCcrop_eq_NY.sch',     'forest_NY.sch',                 '',        'saddlebrown', 0, 2),
+    ('IA_fine',   'pine_lowSOCcrop_eq_IA.sch',     'forest_IA.sch',                 '',        'saddlebrown', 0, 2),
+    ('LA_fine',   'pine_lowSOCcrop_eq_LA.sch',     'forest_LA.sch',                 '',        'saddlebrown', 0, 2),
+
+    ## CROPLAND reversion to grassland (unfertilized switchgrass, ungrazed)
+    ('NY_fine',   'grass_lowSOCcrop_eq.sch',       'grass_NY.sch',                  '',        'g',           0, 2),
+    ('IA_fine',   'grass_lowSOCcrop_eq.sch',       'grass_IA.sch',                  '',        'g',           0, 2),
+    ('LA_fine',   'grass_lowSOCcrop_eq.sch',       'grass_LA.sch',                  '',        'g',           0, 2),
+
 
     #site,        spin-up.sch,                     simulation.sch,                  bio-tech,  color,    detail, ax
-    ## FOREST continued growth (unfertilized pine, 70 y.o. stand)
-    ('NY_coarse', 'pine_pasture_forest_eq_NY.sch', 'forest_NY.sch',                 '',        'saddlebrown', 0, 3),
-    ('IA_coarse', 'pine_pasture_forest_eq_IA.sch', 'forest_IA.sch',                 '',        'saddlebrown', 0, 3),
-    ('LA_coarse', 'pine_pasture_forest_eq_LA.sch', 'forest_LA.sch',                 '',        'saddlebrown', 0, 3),
-
     ## FOREST (70 y.o. stand) conversion to energy grass (fertilized switchgrass, ungrazed) - current technology
     ('NY_coarse', 'pine_eq_NY.sch',                'forest_harv_switch_NY.sch',     'current', 'deepskyblue', 0, 3),
     ('IA_coarse', 'pine_eq_IA.sch',                'forest_harv_switch_IA.sch',     'current', 'deepskyblue', 0, 3),
@@ -1504,7 +1508,12 @@ run_combos = [
     ## FOREST (70 y.o. stand) conversion to energy grass (fertilized switchgrass, ungrazed) - mature technology & CCS
     ('NY_coarse', 'pine_eq_NY.sch',                'forest_harv_switch_fut_NY.sch', 'CCS',     'navy',        0, 3),
     ('IA_coarse', 'pine_eq_IA.sch',                'forest_harv_switch_fut_IA.sch', 'CCS',     'navy',        0, 3),
-    ('LA_coarse', 'pine_eq_LA.sch',                'forest_harv_switch_fut_LA.sch', 'CCS',     'navy',        0, 3)
+    ('LA_coarse', 'pine_eq_LA.sch',                'forest_harv_switch_fut_LA.sch', 'CCS',     'navy',        0, 3),
+
+    ## FOREST continued growth (unfertilized pine, 70 y.o. stand)
+    ('NY_coarse', 'pine_pasture_forest_eq_NY.sch', 'forest_NY.sch',                 '',        'saddlebrown', 0, 3),
+    ('IA_coarse', 'pine_pasture_forest_eq_IA.sch', 'forest_IA.sch',                 '',        'saddlebrown', 0, 3),
+    ('LA_coarse', 'pine_pasture_forest_eq_LA.sch', 'forest_LA.sch',                 '',        'saddlebrown', 0, 3)
 ]
 
 labels = [
